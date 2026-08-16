@@ -115,7 +115,7 @@ mpv/
 
 ### 1. Depoyu Klonlayın
 ```bash
-git clone <repo-url>
+git clone https://github.com/andckadir/python-prediction
 cd mpv
 ```
 
