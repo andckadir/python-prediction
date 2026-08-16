@@ -30,25 +30,31 @@
 
         <!-- 0. SEKME: DATA PREPROCESSING -->
         <div id="tab-preprocess" class="tab-content active space-y-4">
-            <h2 class="text-xl font-bold text-teal-300">Veri Ön İşleme Önizlemesi</h2>
-            <p class="text-slate-400 text-xs">Diyabet verisinde 0 girilen değerler (Glikoz, Tansiyon, Cilt Kalınlığı, BMI) eksik veri kabul edilip eğitim setinin medyanı ile doldurulur, ardından StandardScaler ile ölçeklenir. Denemek için bir alanı 0 bırakın.</p>
+            <h2 class="text-xl font-bold text-teal-300">Veri Ön İşleme Hattı (Pipeline Visualizer)</h2>
+            <p class="text-slate-400 text-xs">Diyabet verisinde 0 girilen biyolojik değerler (Glikoz, Tansiyon, Cilt Kalınlığı, BMI) eksik veri kabul edilip eğitim setinin medyanı ile doldurulur (Median Imputation), ardından StandardScaler ile normalize edilir.</p>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="text-xs text-slate-400">Hamilelik Sayısı</label><input type="number" id="p0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="1"></div>
-                <div><label class="text-xs text-slate-400">Glikoz</label><input type="number" id="p1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="0"></div>
+                <div><label class="text-xs text-slate-400">Glikoz (0 = Eksik Veri)</label><input type="number" id="p1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="0"></div>
                 <div><label class="text-xs text-slate-400">Kan Basıncı</label><input type="number" id="p2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="70"></div>
-                <div><label class="text-xs text-slate-400">Cilt Kalınlığı</label><input type="number" id="p3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="20"></div>
+                <div><label class="text-xs text-slate-400">Cilt Kalınlığı (0 = Eksik Veri)</label><input type="number" id="p3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="0"></div>
                 <div><label class="text-xs text-slate-400">İnsülin</label><input type="number" id="p4" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="80"></div>
                 <div><label class="text-xs text-slate-400">BMI</label><input type="number" id="p5" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="25.5"></div>
                 <div><label class="text-xs text-slate-400">Soyağacı Fonk. (DPF)</label><input type="number" step="0.01" id="p6" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="0.5"></div>
                 <div><label class="text-xs text-slate-400">Yaş</label><input type="number" id="p7" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="33"></div>
             </div>
-            <button onclick="previewPreprocess()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg mt-4">Ön İşlemeyi Çalıştır</button>
-            <div id="result-preprocess" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-xs font-mono overflow-x-auto"></div>
+            <button onclick="previewPreprocess()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg mt-4">Dönüşüm Adımlarını Çalıştır</button>
+            <div id="result-preprocess" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 space-y-3"></div>
+
+            <!-- Akademik Yöntem Notu -->
+            <div class="mt-4 p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
+                <div class="font-bold text-teal-300 flex items-center gap-1.5"><span>📚</span> Akademik Metodoloji: Veri Sızıntısı & İmputasyon</div>
+                <p>Glikoz ve Tansiyonun 0 olması tıbben imkansızdır. Veri sızıntısını (Data Leakage) önlemek için medyan değerleri test setinden değil, yalnızca eğitim setinden hesaplanmış ve StandardScaler fit işlemi sadece X_train üzerinde yapılmıştır.</p>
+            </div>
         </div>
 
         <!-- 1. SEKME: DİYABET -->
         <div id="tab-diabetes" class="tab-content space-y-4">
-            <h2 class="text-xl font-bold text-teal-300">Klinik Diyabet Risk Analizi</h2>
+            <h2 class="text-xl font-bold text-teal-300">Klinik Diyabet Risk Analizi (Binary Logistic Regression)</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div><label class="text-xs text-slate-400">Hamilelik Sayısı</label><input type="number" id="d0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="1"></div>
                 <div><label class="text-xs text-slate-400">Glikoz</label><input type="number" id="d1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="120"></div>
@@ -60,50 +66,187 @@
                 <div><label class="text-xs text-slate-400">Yaş</label><input type="number" id="d7" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="33"></div>
             </div>
             <button onclick="predictDiabetes()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg mt-4">Risk Analizini Çalıştır</button>
-            <div id="result-diabetes" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-center font-medium"></div>
+            <div id="result-diabetes" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700"></div>
+
+            <!-- Model Başarım & Dağılım Grafikleri -->
+            <div class="mt-6 border-t border-slate-700/80 pt-4 space-y-3">
+                <div class="text-xs font-semibold text-slate-300 mb-1">Model Değerlendirme Grafikleri:</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onclick="toggleVisual('diabetes-cm-container')" class="flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-teal-300 bg-slate-900/70 p-3 rounded-xl border border-slate-700 transition">
+                        <span class="flex items-center gap-1.5"><span>📊</span> 2x2 Confusion Matrix</span>
+                        <span id="arrow-diabetes-cm">▼</span>
+                    </button>
+                    <button onclick="toggleVisual('diabetes-roc-container')" class="flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-teal-300 bg-slate-900/70 p-3 rounded-xl border border-slate-700 transition">
+                        <span class="flex items-center gap-1.5"><span>📈</span> ROC Eğrisi (AUC = 0.8230)</span>
+                        <span id="arrow-diabetes-roc">▼</span>
+                    </button>
+                </div>
+
+                <div id="diabetes-cm-container" class="hidden p-4 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <img src="http://127.0.0.1:8000/visualizations/confusion-matrix/diabetes" alt="Diyabet Confusion Matrix" class="mx-auto rounded-lg shadow-lg border border-slate-800 max-w-full">
+                    <p class="text-[11px] text-slate-400 mt-2">Binary Sınıflandırma: Accuracy %71.43 · True Negatives (82), True Positives (28)</p>
+                </div>
+
+                <div id="diabetes-roc-container" class="hidden p-4 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <img src="http://127.0.0.1:8000/visualizations/roc-curve/diabetes" alt="Diyabet ROC Curve" class="mx-auto rounded-lg shadow-lg border border-slate-800 max-w-full">
+                    <p class="text-[11px] text-slate-400 mt-2">ROC-AUC Skoru: 0.8230 · Modelin rastgele tahmin çizgisine (0.50) kıyasla üstün ayırma gücü.</p>
+                </div>
+            </div>
+
+            <!-- Akademik Yöntem Notu -->
+            <div class="mt-3 p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
+                <div class="font-bold text-teal-300 flex items-center gap-1.5"><span>📚</span> Akademik Metodoloji: Binary Logistic Regression</div>
+                <p>8 klinik özellik StandardScaler ile standardize edildikten sonra L2 regülarizasyonlu Logistic Regression modeli eğitilmiştir. Model klinik risk tahmini için 0.8230 AUC başarı seviyesine ulaşmıştır.</p>
+            </div>
         </div>
 
-        <!-- 2. SEKME: RAKAM TANIMA (Paint Board) -->
+        <!-- 2. SEKME: RAKAM TANIMA (Digits) -->
         <div id="tab-digit" class="tab-content space-y-4">
-            <h2 class="text-xl font-bold text-teal-300">El Yazısı Rakam Tanıma (Digits)</h2>
-            <p class="text-slate-400 text-xs">Kutunun içine fare ile bir rakam (0-9) çizin. Çizim otomatik olarak 8x8'e küçültülüp modele gönderilir.</p>
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-teal-300">El Yazısı Rakam Tanıma (Multinomial Logistic Regression)</h2>
+                <span id="digit-source-badge" class="text-xs px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 font-medium">✍️ Elle Çizim Modu</span>
+            </div>
+            <p class="text-slate-400 text-xs">Aşağıdaki 280x280 alana fare/dokunmatik ile 0-9 arası rakam çizebilir veya test setinden gerçek örnekler yükleyebilirsiniz.</p>
 
-            <div class="flex justify-center">
-                <canvas id="digitCanvas" width="280" height="280" class="bg-black rounded-lg border border-slate-700"></canvas>
+            <div class="flex flex-col sm:flex-row gap-4 items-center justify-center bg-slate-900/60 p-4 rounded-xl border border-slate-700">
+                <!-- Ana Çizim Alanı -->
+                <div class="flex flex-col items-center">
+                    <canvas id="digitCanvas" width="280" height="280" class="bg-black rounded-lg border-2 border-slate-700 shadow-inner"></canvas>
+                    <span class="text-[11px] text-slate-500 mt-1">280x280 Çizim Alanı</span>
+                </div>
+
+                <!-- 8x8 Model Girişi Önizleme & Hızlı İşlemler -->
+                <div class="flex flex-col items-center justify-between space-y-3">
+                    <div class="text-center">
+                        <canvas id="previewCanvas" width="80" height="80" class="bg-black rounded-lg border border-slate-700 shadow-inner" style="image-rendering: pixelated;"></canvas>
+                        <span class="text-[11px] text-slate-400 block mt-1">Model Girdisi (8x8)</span>
+                    </div>
+                    <button onclick="clearCanvas()" class="w-full bg-slate-700 hover:bg-slate-600 transition text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5">
+                        <span>🧹</span> Çizimi Temizle
+                    </button>
+                    <button onclick="loadRandomDigitSample()" class="w-full bg-indigo-600 hover:bg-indigo-500 transition text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 shadow">
+                        <span>🎲</span> Rastgele Veriseti
+                    </button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="clearCanvas()" class="w-full bg-slate-700 hover:bg-slate-600 transition text-white py-2.5 rounded-xl text-sm font-semibold">Temizle</button>
-                <button onclick="loadSampleDigit()" class="w-full bg-slate-700 hover:bg-slate-600 transition text-white py-2.5 rounded-xl text-sm font-semibold">Gerçek Örnek Yükle</button>
+            <!-- Verisetinden Belirli Rakam Seçme Butonları -->
+            <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-700/60">
+                <div class="text-xs text-slate-400 mb-2 font-medium">Veri Setinden Rakam Seç:</div>
+                <div class="grid grid-cols-10 gap-1">
+                    <button onclick="loadSpecificDigitSample(0)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">0</button>
+                    <button onclick="loadSpecificDigitSample(1)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">1</button>
+                    <button onclick="loadSpecificDigitSample(2)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">2</button>
+                    <button onclick="loadSpecificDigitSample(3)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">3</button>
+                    <button onclick="loadSpecificDigitSample(4)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">4</button>
+                    <button onclick="loadSpecificDigitSample(5)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">5</button>
+                    <button onclick="loadSpecificDigitSample(6)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">6</button>
+                    <button onclick="loadSpecificDigitSample(7)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">7</button>
+                    <button onclick="loadSpecificDigitSample(8)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">8</button>
+                    <button onclick="loadSpecificDigitSample(9)" class="digit-select-btn py-1.5 bg-slate-800 hover:bg-teal-600 text-white rounded text-xs font-bold transition">9</button>
+                </div>
             </div>
 
-            <button onclick="predictDigit()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg">Rakamı Tahmin Et</button>
+            <button onclick="predictDigit()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+                <span>🚀</span> Rakamı Tahmin Et
+            </button>
             <div id="result-digit" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-center font-medium"></div>
+
+            <!-- Model Başarım & Dağılım Grafiği (Confusion Matrix) -->
+            <div class="mt-6 border-t border-slate-700/80 pt-4">
+                <button onclick="toggleVisual('digits-cm-container')" class="w-full flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-teal-300 bg-slate-900/70 p-3 rounded-xl border border-slate-700 transition">
+                    <span class="flex items-center gap-2">
+                        <span>📊</span> Rapordaki 10x10 Confusion Matrix Isı Haritası
+                    </span>
+                    <span id="arrow-digits-cm">▼</span>
+                </button>
+                <div id="digits-cm-container" class="hidden mt-3 p-4 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <img src="http://127.0.0.1:8000/visualizations/confusion-matrix/digits" alt="Digits Confusion Matrix" class="mx-auto rounded-lg shadow-lg border border-slate-800 max-w-full">
+                    <p class="text-[11px] text-slate-400 mt-2">Multiclass Sınıflandırma: Accuracy: %97.22 · Stratified Test Seti (N=360)</p>
+                </div>
+            </div>
+
+            <!-- Akademik Yöntem Notu -->
+            <div class="mt-3 p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
+                <div class="font-bold text-teal-300 flex items-center gap-1.5"><span>📚</span> Akademik Metodoloji: 10 Sınıflı Multinomial Logistic Regression</div>
+                <p>1,797 adet 8x8 piksel örneği üzerinde eğitilen model, test setinde %97.22 genel doğruluk oranı ve 0.97 F1-skor elde etmiştir.</p>
+            </div>
         </div>
 
         <!-- 3. SEKME: RFM KÜMELEME -->
         <div id="tab-rfm" class="tab-content space-y-4">
-            <h2 class="text-xl font-bold text-teal-300">Müşteri Segmentasyonu (RFM K-Means)</h2>
+            <h2 class="text-xl font-bold text-teal-300">Müşteri Segmentasyonu (K-Means++ Clustering)</h2>
             <div class="space-y-3">
                 <div><label class="text-xs text-slate-400">Recency (Son alışverişten bu yana geçen gün)</label><input type="number" id="rfmR" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="15"></div>
                 <div><label class="text-xs text-slate-400">Frequency (Toplam alışveriş sayısı)</label><input type="number" id="rfmF" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="6"></div>
-                <div><label class="text-xs text-slate-400">Monetary (Toplam harcama tutarı)</label><input type="number" id="rfmM" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="1250"></div>
+                <div><label class="text-xs text-slate-400">Monetary (Toplam harcama tutarı ₺)</label><input type="number" id="rfmM" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" value="1250"></div>
             </div>
-            <button onclick="clusterRFM()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg mt-4">Müşteri Segmentini Bul</button>
-            <div id="result-rfm" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-center font-medium"></div>
+            <button onclick="clusterRFM()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg mt-4">Müşteri Segmentini ve Konumunu Bul</button>
+            <div id="result-rfm" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700"></div>
+
+            <!-- Model Grafikleri -->
+            <div class="mt-6 border-t border-slate-700/80 pt-4 space-y-3">
+                <div class="text-xs font-semibold text-slate-300 mb-1">Segmentasyon ve Kümeleme Grafikleri:</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button onclick="toggleVisual('rfm-scatter-container')" class="flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-teal-300 bg-slate-900/70 p-3 rounded-xl border border-slate-700 transition">
+                        <span class="flex items-center gap-1.5"><span>🌟</span> Canlı Müşteri Dağılım Grafiği</span>
+                        <span id="arrow-rfm-scatter">▼</span>
+                    </button>
+                    <button onclick="toggleVisual('rfm-elbow-container')" class="flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-teal-300 bg-slate-900/70 p-3 rounded-xl border border-slate-700 transition">
+                        <span class="flex items-center gap-1.5"><span>📉</span> Elbow (Dirsek) Grafiği</span>
+                        <span id="arrow-rfm-elbow">▼</span>
+                    </button>
+                </div>
+
+                <div id="rfm-scatter-container" class="hidden p-4 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <img id="cluster-scatter-img" src="http://127.0.0.1:8000/visualizations/cluster-scatter?recency=15&frequency=6&monetary=1250" alt="RFM Scatter" class="mx-auto rounded-lg shadow-lg border border-slate-800 max-w-full">
+                    <p class="text-[11px] text-slate-400 mt-2">Kırmızı Yıldız: Girdiğiniz müşterinin 2D Öklid uzayındaki tam küme konumunu gösterir.</p>
+                </div>
+
+                <div id="rfm-elbow-container" class="hidden p-4 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <img src="http://127.0.0.1:8000/visualizations/elbow-curve" alt="Elbow Curve" class="mx-auto rounded-lg shadow-lg border border-slate-800 max-w-full">
+                    <p class="text-[11px] text-slate-400 mt-2">WCSS Analizi: Matematiksel kırılma K=2 dirseğidir; ancak aksiyon alınabilir pazarlama segmentasyonu için K=4 seçilmiştir.</p>
+                </div>
+            </div>
+
+            <!-- Akademik Yöntem Notu -->
+            <div class="mt-3 p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
+                <div class="font-bold text-teal-300 flex items-center gap-1.5"><span>📚</span> Akademik Metodoloji: RFM & K-Means++</div>
+                <p>Müşteri verileri Recency, Frequency ve Monetary boyutlarına indirgenmiş; aşırı sağa çarpıklığı gidermek için log1p ve StandardScaler uygulanmıştır. K-Means++ başlangıç algoritması ile yerel minimumlara takılmadan kümeleme yapılmıştır.</p>
+            </div>
         </div>
 
         <!-- 4. SEKME: ASSOCIATION RULE MINING -->
         <div id="tab-arm" class="tab-content space-y-4">
-            <h2 class="text-xl font-bold text-teal-300">Ürün Öneri Motoru (Market Basket)</h2>
-            <p class="text-slate-400 text-xs">Fransa siparişleri üzerinde eğitilmiş Apriori kurallarından; seçilen ürünle birlikte sıkça satın alınan ürünleri gösterir.</p>
+            <h2 class="text-xl font-bold text-teal-300">Ürün Öneri Motoru (Market Basket Analysis - Apriori)</h2>
+            <p class="text-slate-400 text-xs">Fransa siparişleri üzerinde Apriori algoritmasıyla çıkarılan birliktelik kuralları üzerinden seçilen ürünle en güçlü ilişkili ürünleri gösterir.</p>
             <div>
                 <label class="text-xs text-slate-400">Ürün Adı</label>
                 <input list="product-list" id="armProduct" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 mt-1 text-sm focus:border-teal-500 focus:outline-none" placeholder="Örn: SET/6 RED SPOTTY PAPER PLATES">
                 <datalist id="product-list"></datalist>
             </div>
             <button onclick="recommendProducts()" class="w-full bg-teal-600 hover:bg-teal-500 transition text-white font-bold py-3 rounded-xl shadow-lg mt-4">Önerileri Getir</button>
-            <div id="result-arm" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-sm space-y-2"></div>
+            <div id="result-arm" class="hidden mt-4 p-4 rounded-xl bg-slate-900 border border-slate-700 text-sm space-y-3"></div>
+
+            <!-- Model Grafiği -->
+            <div class="mt-6 border-t border-slate-700/80 pt-4">
+                <button onclick="toggleVisual('arm-scatter-container')" class="w-full flex items-center justify-between text-xs font-semibold text-slate-300 hover:text-teal-300 bg-slate-900/70 p-3 rounded-xl border border-slate-700 transition">
+                    <span class="flex items-center gap-2">
+                        <span>📊</span> Rapordaki Birliktelik Kuralları Dağılım Grafiği (Support vs. Confidence vs. Lift)
+                    </span>
+                    <span id="arrow-arm-scatter">▼</span>
+                </button>
+                <div id="arm-scatter-container" class="hidden mt-3 p-4 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <img src="http://127.0.0.1:8000/visualizations/arm-scatter" alt="ARM Scatter" class="mx-auto rounded-lg shadow-lg border border-slate-800 max-w-full">
+                    <p class="text-[11px] text-slate-400 mt-2">Apriori Kuralları Dağılımı: Renk ve büyüklük Lift (kaldıraç gücünü), eksenler Destek ve Güven oranlarını gösterir.</p>
+                </div>
+            </div>
+
+            <!-- Akademik Yöntem Notu -->
+            <div class="mt-3 p-3.5 bg-slate-900/60 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1.5">
+                <div class="font-bold text-teal-300 flex items-center gap-1.5"><span>📚</span> Akademik Metodoloji: Apriori Birliktelik Kuralları</div>
+                <p>Support (Destek) minimum eşik değeri %2 olarak belirlenmiş, tesadüfi alımları filtrelemek için Lift > 1.0 kriterine sahip en güçlü çapraz satış kuralları filtrelenmiştir.</p>
+            </div>
         </div>
     </div>
 
@@ -124,12 +267,33 @@
             if (tabName === 'arm') loadProductList();
         }
 
+        function toggleVisual(containerId) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const arrowMap = {
+                'diabetes-cm-container': 'arrow-diabetes-cm',
+                'diabetes-roc-container': 'arrow-diabetes-roc',
+                'digits-cm-container': 'arrow-digits-cm',
+                'rfm-scatter-container': 'arrow-rfm-scatter',
+                'rfm-elbow-container': 'arrow-rfm-elbow',
+                'arm-scatter-container': 'arrow-arm-scatter'
+            };
+            const arrow = document.getElementById(arrowMap[containerId]);
+            if (el.classList.contains('hidden')) {
+                el.classList.remove('hidden');
+                if (arrow) arrow.innerText = '▲';
+            } else {
+                el.classList.add('hidden');
+                if (arrow) arrow.innerText = '▼';
+            }
+        }
+
         // ---------------- PREPROCESSING ----------------
         async function previewPreprocess() {
             const data = [0, 1, 2, 3, 4, 5, 6, 7].map(i => parseFloat(document.getElementById(`p${i}`).value));
             const resBox = document.getElementById('result-preprocess');
             resBox.classList.remove('hidden');
-            resBox.innerText = "İşleniyor...";
+            resBox.innerHTML = "<span class='text-slate-400 text-sm'>Boru hattı çalıştırılıyor...</span>";
             try {
                 const response = await fetch(`${API_URL}/preprocess/diabetes`, {
                     method: 'POST',
@@ -137,11 +301,45 @@
                     body: JSON.stringify({ data })
                 });
                 const json = await response.json();
-                resBox.innerHTML = `<strong class="text-teal-400">Ham Veri:</strong> ${JSON.stringify(json.raw)}<br><br>` +
-                    `<strong class="text-teal-400">Medyan ile Doldurulmuş:</strong> ${JSON.stringify(json.imputed)}<br><br>` +
-                    `<strong class="text-teal-400">Ölçeklenmiş (StandardScaler):</strong> ${JSON.stringify(json.scaled)}`;
+                const cols = Object.keys(json.raw);
+                
+                let rowsHtml = cols.map(c => {
+                    const isImputed = json.imputed_flags[c];
+                    const rawVal = json.raw[c];
+                    const impVal = json.imputed[c];
+                    const scaleVal = json.scaled[c];
+                    const impBadge = isImputed 
+                        ? `<span class="px-2 py-0.5 rounded bg-amber-900/60 text-amber-300 border border-amber-700 font-bold text-[10px]">✨ Medyanla Dolduruldu (${impVal})</span>`
+                        : `<span class="text-slate-300">${impVal}</span>`;
+                        
+                    return `
+                        <tr class="border-b border-slate-800 hover:bg-slate-800/40 transition">
+                            <td class="py-2 px-3 font-medium text-slate-300">${c}</td>
+                            <td class="py-2 px-3 ${rawVal === 0 ? 'text-amber-400 font-bold' : 'text-slate-300'}">${rawVal}</td>
+                            <td class="py-2 px-3">${impBadge}</td>
+                            <td class="py-2 px-3 font-mono text-teal-300">${scaleVal.toFixed(3)}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                resBox.innerHTML = `
+                    <div class="font-bold text-teal-300 text-sm mb-2">⚡ Veri Dönüşüm Akış Tablosu:</div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="text-slate-400 border-b border-slate-700 bg-slate-800/60">
+                                <tr>
+                                    <th class="py-2 px-3">Özellik</th>
+                                    <th class="py-2 px-3">1. Ham Değer</th>
+                                    <th class="py-2 px-3">2. Eksik Veri İşlemi</th>
+                                    <th class="py-2 px-3">3. StandardScaler (z-score)</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                `;
             } catch (e) {
-                resBox.innerText = "Sunucu bağlantı hatası!";
+                resBox.innerHTML = "<span class='text-rose-400 text-sm'>Sunucu bağlantı hatası!</span>";
             }
         }
 
@@ -150,7 +348,7 @@
             const data = [0, 1, 2, 3, 4, 5, 6, 7].map(i => parseFloat(document.getElementById(`d${i}`).value));
             const resBox = document.getElementById('result-diabetes');
             resBox.classList.remove('hidden');
-            resBox.innerText = "Hesaplanıyor...";
+            resBox.innerHTML = "<span class='text-slate-400 text-sm'>Klinik risk hesaplanıyor...</span>";
             try {
                 const response = await fetch(`${API_URL}/predict/diabetes`, {
                     method: 'POST',
@@ -158,88 +356,222 @@
                     body: JSON.stringify({ data })
                 });
                 const json = await response.json();
-                const status = json.prediction === 1 ? "⚠️ Yüksek Diyabet Riski" : "✅ Düşük Risk (Sağlıklı)";
-                resBox.innerHTML = `<span class="text-lg">${status}</span><br><span class="text-sm text-slate-400">Hastalık Olasılığı: %${json.probability.toFixed(2)}</span>`;
+                const isHighRisk = json.prediction === 1;
+                const status = isHighRisk ? "⚠️ Yüksek Diyabet Riski" : "✅ Düşük Risk (Sağlıklı)";
+                const colorClass = isHighRisk ? "text-rose-400" : "text-emerald-400";
+                const barColor = isHighRisk ? "bg-rose-500" : "bg-emerald-500";
+                const prob = json.probability;
+
+                resBox.innerHTML = `
+                    <div class="text-xl font-extrabold ${colorClass} text-center mb-1">${status}</div>
+                    <div class="text-xs text-slate-400 text-center mb-3">Lojistik Regresyon Hastalık İhtimali: <strong class="text-white">%${prob.toFixed(1)}</strong></div>
+                    <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden mb-2">
+                        <div class="${barColor} h-3 transition-all duration-500" style="width: ${prob}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400">
+                        <span>%0 (Sağlıklı)</span>
+                        <span>Eşik: %50</span>
+                        <span>%100 (Yüksek Risk)</span>
+                    </div>
+                `;
             } catch (e) {
-                resBox.innerText = "Sunucu bağlantı hatası!";
+                resBox.innerHTML = "<span class='text-rose-400 text-sm'>Sunucu bağlantı hatası!</span>";
             }
         }
 
-        // ---------------- RAKAM (PAINT BOARD) ----------------
+        // ---------------- RAKAM (PAINT BOARD & DATASET) ----------------
         const canvas = document.getElementById('digitCanvas');
         const ctx = canvas.getContext('2d');
-        let drawing = false;
+        const previewCanvas = document.getElementById('previewCanvas');
+        const pctx = previewCanvas ? previewCanvas.getContext('2d') : null;
+
+        let isDrawing = false;
+        let currentSource = 'draw'; // 'draw' or 'dataset'
+        let loadedDatasetSample = null;
+
+        function updateSourceBadge(text = null) {
+            const badge = document.getElementById('digit-source-badge');
+            if (!badge) return;
+            if (currentSource === 'dataset' && loadedDatasetSample) {
+                badge.innerText = text || `📂 Veriseti: Rakam ${loadedDatasetSample.digit} (#${loadedDatasetSample.index})`;
+                badge.className = "text-xs px-2.5 py-1 rounded-full bg-indigo-900/80 text-indigo-200 border border-indigo-700 font-medium";
+            } else {
+                badge.innerText = "✍️ Elle Çizim Modu";
+                badge.className = "text-xs px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 font-medium";
+            }
+        }
 
         function initCanvas() {
             ctx.fillStyle = 'black';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = 'white';
-            ctx.lineWidth = 18;
+            ctx.lineWidth = 26;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
+
+            if (pctx) {
+                pctx.fillStyle = 'black';
+                pctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+            }
+            currentSource = 'draw';
+            loadedDatasetSample = null;
+            updateSourceBadge();
         }
         initCanvas();
 
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
-            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
         }
 
         canvas.addEventListener('pointerdown', (e) => {
-            drawing = true;
+            isDrawing = true;
+            if (currentSource === 'dataset') {
+                initCanvas();
+            }
+            currentSource = 'draw';
+            loadedDatasetSample = null;
+            updateSourceBadge();
             const p = getPos(e);
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
         });
+
         canvas.addEventListener('pointermove', (e) => {
-            if (!drawing) return;
+            if (!isDrawing) return;
             const p = getPos(e);
             ctx.lineTo(p.x, p.y);
             ctx.stroke();
         });
-        window.addEventListener('pointerup', () => { drawing = false; });
+
+        window.addEventListener('pointerup', () => {
+            if (isDrawing) {
+                isDrawing = false;
+                updatePreviewFromCanvas();
+            }
+        });
 
         function clearCanvas() {
             initCanvas();
             document.getElementById('result-digit').classList.add('hidden');
         }
 
-        // 280x280 canvas'ı 8x8'e indirger, 0-16 aralığına ölçekler (sklearn digits formatı)
+        function updatePreviewCanvas(pixels) {
+            if (!pctx) return;
+            pctx.fillStyle = 'black';
+            pctx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
+            const cell = previewCanvas.width / 8;
+            for (let y = 0; y < 8; y++) {
+                for (let x = 0; x < 8; x++) {
+                    const v = pixels[y * 8 + x];
+                    const gray = Math.round((v / 16) * 255);
+                    pctx.fillStyle = `rgb(${gray},${gray},${gray})`;
+                    pctx.fillRect(x * cell, y * cell, cell, cell);
+                }
+            }
+        }
+
+        function getBoundingBox(imgData, width, height) {
+            let minX = width, minY = height, maxX = -1, maxY = -1;
+            const data = imgData.data;
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    if (data[idx] > 20) { // beyaz cizgi esigi
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+            if (maxX === -1) return null;
+            return { minX, minY, maxX, maxY, w: maxX - minX + 1, h: maxY - minY + 1 };
+        }
+
+        // Cizimi dogrudan piksel blok ortalamasi ve en-boy oraniyla sklearn 8x8 (0-16) formatina donusturur
         function canvasTo8x8() {
-            const small = document.createElement('canvas');
-            small.width = 8;
-            small.height = 8;
-            const sctx = small.getContext('2d');
-            sctx.imageSmoothingEnabled = true;
-            sctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, 8, 8);
-            const imgData = sctx.getImageData(0, 0, 8, 8).data;
+            if (currentSource === 'dataset' && loadedDatasetSample) {
+                return loadedDatasetSample.pixels;
+            }
+
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const bbox = getBoundingBox(imgData, canvas.width, canvas.height);
+            if (!bbox) {
+                return new Array(64).fill(0);
+            }
+
+            const data = imgData.data;
+            const w = canvas.width;
+            const res8x8 = new Float32Array(64);
+            let maxVal = 0;
+
+            // load_digits formatinda rakamlar 0..7 satirlarina yayilir ve 1..6 sutunlarina ortalanir
+            const targetCols = Math.min(5.6, Math.max(2.4, (bbox.w / bbox.h) * 7.0));
+            const startCol = Math.max(1.0, (8.0 - targetCols) / 2.0);
+            const endCol = startCol + targetCols;
+
+            for (let r = 0; r < 8; r++) {
+                const y0 = Math.max(0, Math.floor(bbox.minY + (r / 8.0) * bbox.h));
+                const y1 = Math.min(canvas.height, Math.ceil(bbox.minY + ((r + 1) / 8.0) * bbox.h));
+
+                for (let c = 0; c < 8; c++) {
+                    if (c < startCol - 0.5 || c > endCol + 0.5) {
+                        res8x8[r * 8 + c] = 0;
+                        continue;
+                    }
+
+                    const colRel0 = Math.max(0.0, Math.min(1.0, (c - startCol) / targetCols));
+                    const colRel1 = Math.max(0.0, Math.min(1.0, (c + 1 - startCol) / targetCols));
+
+                    if (colRel1 <= colRel0) {
+                        res8x8[r * 8 + c] = 0;
+                        continue;
+                    }
+
+                    const x0 = Math.max(0, Math.floor(bbox.minX + colRel0 * bbox.w));
+                    const x1 = Math.min(canvas.width, Math.ceil(bbox.minX + colRel1 * bbox.w));
+
+                    let sum = 0;
+                    let count = 0;
+                    for (let y = y0; y < y1; y++) {
+                        const rowOffset = y * w;
+                        for (let x = x0; x < x1; x++) {
+                            sum += data[(rowOffset + x) * 4];
+                            count++;
+                        }
+                    }
+
+                    const avg = count > 0 ? sum / count : 0;
+                    res8x8[r * 8 + c] = avg;
+                    if (avg > maxVal) maxVal = avg;
+                }
+            }
 
             const pixels = [];
             for (let i = 0; i < 64; i++) {
-                const r = imgData[i * 4]; // beyaz çizim siyah zemin -> kırmızı kanal yeterli
-                pixels.push(Math.round((r / 255) * 16));
+                if (maxVal > 0) {
+                    pixels.push(Math.round((res8x8[i] / maxVal) * 16));
+                } else {
+                    pixels.push(0);
+                }
             }
             return pixels;
         }
 
-        // sklearn load_digits()'ten alınmış gerçek örnekler (0, 3 ve 7 rakamları)
-        const SAMPLE_DIGITS = {
-            0: [0,0,5,13,9,1,0,0,0,0,13,15,10,15,5,0,0,3,15,2,0,11,8,0,0,4,12,0,0,8,8,0,0,5,8,0,0,9,8,0,0,4,11,0,1,12,7,0,0,2,14,5,10,12,0,0,0,0,6,13,10,0,0,0],
-            3: [0,0,7,15,13,1,0,0,0,8,13,6,15,4,0,0,0,2,1,13,13,0,0,0,0,0,2,15,11,1,0,0,0,0,0,1,12,12,1,0,0,0,0,0,1,10,8,0,0,0,8,4,5,14,9,0,0,0,7,13,13,9,0,0],
-            7: [0,0,7,8,13,16,15,1,0,0,7,7,4,11,12,0,0,0,0,0,8,13,1,0,0,4,8,8,15,15,6,0,0,2,11,15,15,4,0,0,0,0,0,16,5,0,0,0,0,0,9,15,1,0,0,0,0,0,13,5,0,0,0,0],
-        };
-        let lastLoadedSample = null;
-
-        function loadSampleDigit() {
-            const keys = Object.keys(SAMPLE_DIGITS).map(Number);
-            let choice;
-            do { choice = keys[Math.floor(Math.random() * keys.length)]; } while (choice === lastLoadedSample && keys.length > 1);
-            lastLoadedSample = choice;
-            drawSampleOnCanvas(SAMPLE_DIGITS[choice]);
+        function updatePreviewFromCanvas() {
+            const pixels = canvasTo8x8();
+            updatePreviewCanvas(pixels);
         }
 
-        function drawSampleOnCanvas(pixels) {
-            initCanvas();
+        function drawPixelsOnMainCanvas(pixels) {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             const cell = canvas.width / 8;
             for (let y = 0; y < 8; y++) {
                 for (let x = 0; x < 8; x++) {
@@ -249,24 +581,112 @@
                     ctx.fillRect(x * cell, y * cell, cell, cell);
                 }
             }
+            updatePreviewCanvas(pixels);
+        }
+
+        async function loadRandomDigitSample() {
+            const resBox = document.getElementById('result-digit');
+            resBox.classList.remove('hidden');
+            resBox.innerHTML = `<span class="text-slate-400 text-sm">Verisetinden rastgele örnek alınıyor...</span>`;
+            try {
+                const response = await fetch(`${API_URL}/digits/sample`);
+                if (!response.ok) throw new Error("API Hatası");
+                const json = await response.json();
+                loadedDatasetSample = json;
+                currentSource = 'dataset';
+                updateSourceBadge();
+                drawPixelsOnMainCanvas(json.pixels);
+                await predictDigit();
+            } catch (e) {
+                resBox.innerHTML = `<span class="text-rose-400 text-sm">Veriseti örneği yüklenemedi! (${e.message})</span>`;
+            }
+        }
+
+        async function loadSpecificDigitSample(digit) {
+            const resBox = document.getElementById('result-digit');
+            resBox.classList.remove('hidden');
+            resBox.innerHTML = `<span class="text-slate-400 text-sm">Verisetinden '${digit}' örneği alınıyor...</span>`;
+            try {
+                const response = await fetch(`${API_URL}/digits/sample?digit=${digit}`);
+                if (!response.ok) throw new Error("API Hatası");
+                const json = await response.json();
+                loadedDatasetSample = json;
+                currentSource = 'dataset';
+                updateSourceBadge();
+                drawPixelsOnMainCanvas(json.pixels);
+                await predictDigit();
+            } catch (e) {
+                resBox.innerHTML = `<span class="text-rose-400 text-sm">Veriseti örneği yüklenemedi! (${e.message})</span>`;
+            }
         }
 
         async function predictDigit() {
-            const pixels = canvasTo8x8();
+            const pixels = (currentSource === 'dataset' && loadedDatasetSample) ? loadedDatasetSample.pixels : canvasTo8x8();
+            const sum = pixels.reduce((a, b) => a + b, 0);
             const resBox = document.getElementById('result-digit');
             resBox.classList.remove('hidden');
-            resBox.innerText = "Tanımlanıyor...";
+
+            if (sum === 0 && currentSource === 'draw') {
+                resBox.innerHTML = `<span class="text-amber-400 text-sm">⚠️ Lütfen önce çizim alanına bir rakam çizin veya veri setinden bir örnek seçin.</span>`;
+                return;
+            }
+
+            updatePreviewCanvas(pixels);
+            resBox.innerHTML = `<span class="text-slate-400 text-sm">Model analiz ediyor...</span>`;
+
             try {
                 const response = await fetch(`${API_URL}/predict/digit`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ pixels })
                 });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const json = await response.json();
-                resBox.innerHTML = `<span class="text-2xl font-bold text-teal-400">Tahmin Edilen Rakam: ${json.prediction}</span>` +
-                    (json.confidence !== undefined ? `<br><span class="text-sm text-slate-400">Güven: %${json.confidence.toFixed(1)}</span>` : '');
+
+                let matchHtml = '';
+                if (currentSource === 'dataset' && loadedDatasetSample) {
+                    const isMatch = json.prediction === loadedDatasetSample.digit;
+                    const badgeColor = isMatch ? 'bg-emerald-900/60 text-emerald-300 border-emerald-700' : 'bg-amber-900/60 text-amber-300 border-amber-700';
+                    const icon = isMatch ? '✅ Doğru Tahmin' : '⚠️ Farklı Tahmin';
+                    matchHtml = `
+                        <div class="mt-2 text-xs flex items-center justify-center gap-2">
+                            <span class="text-slate-400">Veri Seti Gerçek Etiketi: <strong class="text-white">${loadedDatasetSample.digit}</strong></span>
+                            <span class="px-2 py-0.5 rounded border ${badgeColor} font-semibold">${icon}</span>
+                        </div>
+                    `;
+                }
+
+                // En yüksek ilk 3 olasılık çubuğu veya dökümü
+                let probHtml = '';
+                if (json.probabilities) {
+                    const sortedProbs = Object.entries(json.probabilities)
+                        .map(([d, p]) => ({ digit: parseInt(d), prob: p }))
+                        .sort((a, b) => b.prob - a.prob)
+                        .slice(0, 3);
+
+                    probHtml = `
+                        <div class="mt-3 pt-3 border-t border-slate-800 text-xs text-slate-400">
+                            <div class="font-medium text-slate-300 mb-1.5">En Yüksek Olasılıklar:</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                ${sortedProbs.map(p => `
+                                    <div class="bg-slate-800/80 p-1.5 rounded border border-slate-700">
+                                        <div class="font-bold text-teal-300">Rakam ${p.digit}</div>
+                                        <div class="text-[11px] text-slate-300">%${p.prob.toFixed(1)}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                resBox.innerHTML = `
+                    <div class="text-2xl font-extrabold text-teal-400">Tahmin Edilen Rakam: ${json.prediction}</div>
+                    <div class="text-sm text-slate-300 mt-0.5">Güven Skoru: <span class="text-teal-300 font-semibold">%${json.confidence.toFixed(1)}</span></div>
+                    ${matchHtml}
+                    ${probHtml}
+                `;
             } catch (e) {
-                resBox.innerText = "Hata oluştu!";
+                resBox.innerHTML = `<span class="text-rose-400 text-sm">Sunucu bağlantı hatası! (${e.message})</span>`;
             }
         }
 
@@ -277,7 +697,7 @@
             const monetary = parseFloat(document.getElementById('rfmM').value);
             const resBox = document.getElementById('result-rfm');
             resBox.classList.remove('hidden');
-            resBox.innerText = "Segment analiz ediliyor...";
+            resBox.innerHTML = "<span class='text-slate-400 text-sm'>Segment ve koordinatlar hesaplanıyor...</span>";
             try {
                 const response = await fetch(`${API_URL}/cluster/rfm`, {
                     method: 'POST',
@@ -285,9 +705,45 @@
                     body: JSON.stringify({ recency, frequency, monetary })
                 });
                 const json = await response.json();
-                resBox.innerHTML = `<span class="text-lg font-bold text-teal-400">${json.label}</span><br><span class="text-xs text-slate-400">Küme No: ${json.cluster}</span>`;
+                
+                // Pazarlama Stratejisi
+                let strategy = "";
+                let badgeClass = "";
+                if (json.cluster === 2) {
+                    badgeClass = "bg-emerald-900/60 text-emerald-300 border-emerald-700";
+                    strategy = "💎 VIP Sadakat Kulübü, erken erişim ve özel hediyeler sunun.";
+                } else if (json.cluster === 1) {
+                    badgeClass = "bg-rose-900/60 text-rose-300 border-rose-700";
+                    strategy = "🚨 Acil Geri Kazanma İndirimi (%20 Kupon) veya 'Seni Özledik' e-postası tetikleyin.";
+                } else if (json.cluster === 3) {
+                    badgeClass = "bg-amber-900/60 text-amber-300 border-amber-700";
+                    strategy = "🌱 İkinci alışverişe teşvik eden hoş geldin kampanyaları uygulayın.";
+                } else {
+                    badgeClass = "bg-sky-900/60 text-sky-300 border-sky-700";
+                    strategy = "📦 Sezonluk bültenler ve standart çapraz satış önerileri sunun.";
+                }
+
+                resBox.innerHTML = `
+                    <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+                        <span class="text-lg font-bold text-teal-300">${json.label}</span>
+                        <span class="text-xs px-2.5 py-1 rounded-full border ${badgeClass} font-semibold">Küme ${json.cluster}</span>
+                    </div>
+                    <div class="text-xs text-slate-300 bg-slate-800/80 p-2.5 rounded-lg border border-slate-700/80">
+                        <span class="font-bold text-teal-400">💡 Pazarlama Aksiyonu:</span> ${strategy}
+                    </div>
+                `;
+
+                // Scatter grafigini yeni girilen musterinin kirmizi yildiz konumuyla canli guncelle
+                const scatterImg = document.getElementById('cluster-scatter-img');
+                if (scatterImg) {
+                    scatterImg.src = `${API_URL}/visualizations/cluster-scatter?recency=${recency}&frequency=${frequency}&monetary=${monetary}&t=${Date.now()}`;
+                }
+                const scatterContainer = document.getElementById('rfm-scatter-container');
+                if (scatterContainer && scatterContainer.classList.contains('hidden')) {
+                    toggleVisual('rfm-scatter-container');
+                }
             } catch (e) {
-                resBox.innerText = "Hata oluştu!";
+                resBox.innerHTML = "<span class='text-rose-400 text-sm'>Segment hesaplanırken hata oluştu!</span>";
             }
         }
 
@@ -312,7 +768,7 @@
             const product = document.getElementById('armProduct').value;
             const resBox = document.getElementById('result-arm');
             resBox.classList.remove('hidden');
-            resBox.innerText = "Aranıyor...";
+            resBox.innerHTML = "<span class='text-slate-400 text-sm'>Birliktelik kuralları taranıyor...</span>";
             try {
                 const response = await fetch(`${API_URL}/rules/recommend`, {
                     method: 'POST',
@@ -321,17 +777,38 @@
                 });
                 const json = await response.json();
                 if (!json.recommendations.length) {
-                    resBox.innerHTML = `<span class="text-slate-400">Bu ürün için kayıtlı bir kural bulunamadı.</span>`;
+                    resBox.innerHTML = `<span class="text-slate-400">Bu ürün için yeterli destek eşiğine (Support >= %2) sahip bir kural bulunamadı.</span>`;
                     return;
                 }
-                resBox.innerHTML = json.recommendations.map(r => `
-                    <div class="border-b border-slate-700 pb-2">
-                        <span class="text-teal-400 font-semibold">→ ${r.consequent}</span><br>
-                        <span class="text-xs text-slate-400">Support: ${r.support} · Confidence: ${r.confidence} · Lift: ${r.lift}</span>
-                    </div>
-                `).join('');
+                
+                const recsHtml = json.recommendations.map(r => {
+                    const liftColor = r.lift > 5 ? 'text-amber-400' : 'text-teal-300';
+                    const confPct = (r.confidence * 100).toFixed(1);
+                    return `
+                        <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-teal-300 text-sm">🛒 ${r.consequent}</span>
+                                <span class="text-xs px-2 py-0.5 rounded bg-slate-900 font-mono font-bold ${liftColor}">Lift: ${r.lift.toFixed(2)}x</span>
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[11px] text-slate-400">
+                                    <span>Birlikte Alınma Güveni (Confidence): %${confPct}</span>
+                                    <span>Destek (Support): %${(r.support * 100).toFixed(1)}</span>
+                                </div>
+                                <div class="w-full bg-slate-900 rounded-full h-2 overflow-hidden">
+                                    <div class="bg-teal-500 h-2 rounded-full" style="width: ${Math.min(100, r.confidence * 100)}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                resBox.innerHTML = `
+                    <div class="text-xs font-bold text-slate-300 mb-2">🔥 Sepete Eklenebilecek Çapraz Satış Önerileri (${json.recommendations.length}):</div>
+                    <div class="space-y-2.5">${recsHtml}</div>
+                `;
             } catch (e) {
-                resBox.innerText = "Hata oluştu!";
+                resBox.innerHTML = "<span class='text-rose-400 text-sm'>Öneriler alınırken hata oluştu!</span>";
             }
         }
     </script>
