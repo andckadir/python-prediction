@@ -168,15 +168,6 @@ Otomatik interaktif Swagger dokümantasyonuna **`http://127.0.0.1:8000/docs`** a
 
 ---
 
-## 🎓 Akademik Referans ve Metodoloji
-
-Bu proje, Dokuz Eylül Üniversitesi Bilgisayar Mühendisliği Bölümü bünyesinde gerçekleştirilen makine öğrenmesi araştırma ve staj raporlarındaki teorik ve deneysel metodolojilere dayanmaktadır.
-
-- **Geliştirici:** Abdulkadir ANDIÇ
-- **Akademik Danışman:** Prof. Dr. Alp KUT
-
----
-
 <div align="center">
   <sub>Modern Veri Bilimi ve Yapay Zeka Uygulamaları © 2026</sub>
 </div>
