@@ -118,7 +118,7 @@ mpv/
 ### 1. Depoyu Klonlayın
 ```bash
 git clone https://github.com/andckadir/python-prediction
-cd mpv
+cd mvp
 ```
 
 ### 2. Sanal Ortamı Oluşturun ve Aktif Edin
