@@ -102,14 +102,17 @@
                             <span class="text-[11px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-medium">8 Klinik Özellik</span>
                         </div>
                         <p class="text-xs text-slate-400 leading-relaxed">
-                            Biyolojik olarak sıfır olamayacak değerleri (Glikoz, Tansiyon, Cilt Kalınlığı, BMI) test edin. Dönüşüm adımları canlı çalışacaktır.
+                            Biyolojik olarak sıfır olamayacak eksik değerleri (Glikoz, Tansiyon, Cilt Kalınlığı, BMI) ve mantıksız uç/aykırı değerleri (Hamilelik: 1000, Yaş: -5 vb.) test edin. Ön işleme ve kırpma (capping) adımları canlı çalışacaktır.
                         </p>
 
                         <!-- Hızlı Örnek Doldurma Butonları -->
                         <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-800">
                             <span class="text-[11px] text-slate-400 self-center">Hazır Şablon:</span>
                             <button onclick="setPreprocessSample(1, 0, 70, 0, 80, 25.5, 0.5, 33)" class="text-[11px] px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800/60 transition">
-                                ⚠️ Eksik Verili Hasta (0'lı)
+                                ⚠️ Eksik Verili (0'lı)
+                            </button>
+                            <button onclick="setPreprocessSample(1000, 550, -20, 0, 80, 25.5, 0.5, -5)" class="text-[11px] px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 transition font-medium">
+                                🚨 Aykırı Değerler (1000, -5 vb.)
                             </button>
                             <button onclick="setPreprocessSample(3, 145, 80, 28, 120, 31.2, 0.65, 45)" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
                                 ✅ Eksiksiz Hasta
@@ -119,36 +122,36 @@
                         <!-- 8 Parametre Giriş Grid'i -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Hamilelik Sayısı</label>
-                                <input type="number" id="p0" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="1">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Hamilelik Sayısı (0-20)</label>
+                                <input type="number" id="p0" min="0" max="20" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="1">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-amber-400 block mb-1">Glikoz (0 = Eksik Veri)</label>
-                                <input type="number" id="p1" class="w-full bg-slate-900/90 border border-amber-700/60 rounded-xl p-2.5 text-sm text-amber-300 focus:border-teal-500 focus:outline-none transition" value="0">
+                                <label class="text-[11px] font-medium text-amber-400 block mb-1">Glikoz (0 = Eksik, 40-400)</label>
+                                <input type="number" id="p1" min="0" max="400" step="1" class="w-full bg-slate-900/90 border border-amber-700/60 rounded-xl p-2.5 text-sm text-amber-300 focus:border-teal-500 focus:outline-none transition" value="0">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Kan Basıncı (Tansiyon)</label>
-                                <input type="number" id="p2" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="70">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Kan Basıncı (30-240 mmHg)</label>
+                                <input type="number" id="p2" min="0" max="240" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="70">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-amber-400 block mb-1">Cilt Kalınlığı (0 = Eksik)</label>
-                                <input type="number" id="p3" class="w-full bg-slate-900/90 border border-amber-700/60 rounded-xl p-2.5 text-sm text-amber-300 focus:border-teal-500 focus:outline-none transition" value="0">
+                                <label class="text-[11px] font-medium text-amber-400 block mb-1">Cilt Kalınlığı (0 = Eksik, 5-110)</label>
+                                <input type="number" id="p3" min="0" max="110" step="1" class="w-full bg-slate-900/90 border border-amber-700/60 rounded-xl p-2.5 text-sm text-amber-300 focus:border-teal-500 focus:outline-none transition" value="0">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">İnsülin Düzeyi</label>
-                                <input type="number" id="p4" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="80">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">İnsülin Düzeyi (0-900)</label>
+                                <input type="number" id="p4" min="0" max="900" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="80">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Vücut Kitle İndeksi (BMI)</label>
-                                <input type="number" step="0.1" id="p5" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="25.5">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">BMI (10-75 kg/m²)</label>
+                                <input type="number" step="0.1" min="0" max="75" id="p5" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="25.5">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Soyağacı Fonk. (DPF)</label>
-                                <input type="number" step="0.01" id="p6" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="0.50">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Soyağacı Fonk. (0.05-2.50)</label>
+                                <input type="number" step="0.01" min="0.05" max="2.50" id="p6" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="0.50">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Yaş</label>
-                                <input type="number" id="p7" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="33">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Yaş (18-120)</label>
+                                <input type="number" id="p7" min="18" max="120" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="33">
                             </div>
                         </div>
 
@@ -178,10 +181,10 @@
             <!-- Alt Akademik Metodoloji Paneli -->
             <div class="glass-panel p-5 rounded-2xl border border-slate-800 text-xs text-slate-400 space-y-2">
                 <div class="font-bold text-teal-300 flex items-center gap-2 text-sm">
-                    <span>📚</span> Akademik Metodoloji: Veri Sızıntısı (Data Leakage) Koruması & Median Imputation
+                    <span>📚</span> Akademik Metodoloji: Veri Sızıntısı Koruması, Median Imputation & Outlier Capping
                 </div>
                 <p class="leading-relaxed">
-                    Glikoz, Kan Basıncı, Cilt Kalınlığı ve BMI değişkenlerinin sıfır olması tıbben hayatla bağdaşmaz. Bu sıfırlar eksik veri (<span class="font-mono text-amber-300">NaN</span>) kabul edilmiş ve eğitim setinin medyanları ile doldurulmuştur (<span class="font-mono text-teal-300">Glucose: 117.0, BP: 72.0, Skin: 29.0, BMI: 32.3</span>). Veri sızıntısını önlemek amacıyla tüm ölçekleme istatistikleri test setinden tamamen izole tutulmuştur.
+                    Glikoz, Kan Basıncı, Cilt Kalınlığı ve BMI değişkenlerinin sıfır olması tıbben hayatla bağdaşmaz. Bu sıfırlar eksik veri (<span class="font-mono text-amber-300">NaN</span>) kabul edilmiş ve eğitim setinin medyanları ile doldurulmuştur (<span class="font-mono text-teal-300">Glucose: 117.0, BP: 72.0, Skin: 29.0, BMI: 32.3</span>). Ayrıca Hamilelik sayısı (0-20), Yaş (18-120) gibi tüm klinik girdiler mantıksal ve biyolojik limitlere kırpılarak (<span class="font-mono text-teal-300">Winsorization / Capping</span>) uç aykırı değerlerin modeli saptırması engellenmiştir.
                 </p>
             </div>
         </section>
@@ -205,45 +208,48 @@
                         <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-800">
                             <span class="text-[11px] text-slate-400 self-center">Hazır Hasta:</span>
                             <button onclick="setDiabetesSample(6, 148, 72, 35, 0, 33.6, 0.627, 50)" class="text-[11px] px-2.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 transition">
-                                🚨 Yüksek Riskli Hasta (1)
+                                🚨 Yüksek Riskli
                             </button>
                             <button onclick="setDiabetesSample(1, 85, 66, 29, 0, 26.6, 0.351, 31)" class="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-800/60 transition">
-                                ✅ Sağlıklı Birey (0)
+                                ✅ Sağlıklı Birey
+                            </button>
+                            <button onclick="setDiabetesSample(1000, 148, 72, 35, 0, 33.6, 0.627, -10)" class="text-[11px] px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-800/60 transition font-medium">
+                                🛡️ Aykırı Giriş Testi
                             </button>
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Hamilelik Sayısı</label>
-                                <input type="number" id="d0" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="1">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Hamilelik Sayısı (0-20)</label>
+                                <input type="number" id="d0" min="0" max="20" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="1">
                             </div>
                             <div>
                                 <label class="text-[11px] font-medium text-slate-400 block mb-1">Glikoz (mg/dL)</label>
-                                <input type="number" id="d1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="120">
+                                <input type="number" id="d1" min="0" max="400" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="120">
                             </div>
                             <div>
                                 <label class="text-[11px] font-medium text-slate-400 block mb-1">Kan Basıncı (mmHg)</label>
-                                <input type="number" id="d2" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="70">
+                                <input type="number" id="d2" min="0" max="240" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="70">
                             </div>
                             <div>
                                 <label class="text-[11px] font-medium text-slate-400 block mb-1">Cilt Kalınlığı (mm)</label>
-                                <input type="number" id="d3" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="20">
+                                <input type="number" id="d3" min="0" max="110" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="20">
                             </div>
                             <div>
                                 <label class="text-[11px] font-medium text-slate-400 block mb-1">İnsülin (mu U/ml)</label>
-                                <input type="number" id="d4" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="80">
+                                <input type="number" id="d4" min="0" max="900" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="80">
                             </div>
                             <div>
                                 <label class="text-[11px] font-medium text-slate-400 block mb-1">BMI ($kg/m^2$)</label>
-                                <input type="number" step="0.1" id="d5" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="25.5">
+                                <input type="number" step="0.1" min="0" max="75" id="d5" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="25.5">
                             </div>
                             <div>
                                 <label class="text-[11px] font-medium text-slate-400 block mb-1">Soyağacı Fonk. (DPF)</label>
-                                <input type="number" step="0.01" id="d6" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="0.50">
+                                <input type="number" step="0.01" min="0.05" max="2.50" id="d6" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="0.50">
                             </div>
                             <div>
-                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Yaş</label>
-                                <input type="number" id="d7" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="33">
+                                <label class="text-[11px] font-medium text-slate-400 block mb-1">Yaş (18-120)</label>
+                                <input type="number" id="d7" min="18" max="120" step="1" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl p-2.5 text-sm focus:border-teal-500 focus:outline-none transition" value="33">
                             </div>
                         </div>
 
@@ -738,7 +744,7 @@
         }
 
         async function previewPreprocess() {
-            const data = [0, 1, 2, 3, 4, 5, 6, 7].map(i => parseFloat(document.getElementById(`p${i}`).value));
+            const data = [0, 1, 2, 3, 4, 5, 6, 7].map(i => parseFloat(document.getElementById(`p${i}`).value) || 0);
             const resBox = document.getElementById('result-preprocess');
             resBox.innerHTML = "<span class='text-slate-400 text-sm'>Boru hattı dönüştürülüyor...</span>";
             try {
@@ -751,43 +757,72 @@
                 const cols = Object.keys(json.raw);
                 
                 let rowsHtml = cols.map(c => {
-                    const isImputed = json.imputed_flags[c];
+                    const isImputed = json.imputed_flags && json.imputed_flags[c];
+                    const clipInfo = json.clipped_flags && json.clipped_flags[c];
                     const rawVal = json.raw[c];
                     const impVal = json.imputed[c];
                     const scaleVal = json.scaled[c];
-                    const impBadge = isImputed 
-                        ? `<span class="px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold text-[10px]">✨ Medyan (${impVal})</span>`
-                        : `<span class="text-slate-300 font-mono">${impVal}</span>`;
+                    const boundInfo = json.bounds && json.bounds[c];
+                    const boundText = boundInfo ? `<span class="text-[10px] text-slate-500 block font-sans">${boundInfo.label} [${boundInfo.min} - ${boundInfo.max}]</span>` : '';
+                    
+                    let impBadge = `<span class="text-slate-300 font-mono">${impVal}</span>`;
+                    if (isImputed) {
+                        impBadge = `<span class="px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-700/80 font-bold text-[10px]">✨ Medyan (${impVal})</span>`;
+                    } else if (clipInfo) {
+                        impBadge = `<span class="px-2 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-700/80 font-bold text-[10px]" title="Aykırı değer sınırlandı">🛡️ Kırpıldı (${clipInfo.from} ➔ ${clipInfo.to})</span>`;
+                    }
+                    
+                    const isAbnormalRaw = (rawVal <= 0 && isImputed) || (clipInfo !== null && clipInfo !== undefined);
+                    const rawColor = isAbnormalRaw ? 'text-rose-400 font-bold' : 'text-slate-300 font-mono';
                         
                     return `
                         <tr class="border-b border-slate-800/80 hover:bg-slate-800/40 transition">
-                            <td class="py-2.5 px-3.5 font-medium text-slate-200">${c}</td>
-                            <td class="py-2.5 px-3.5 ${rawVal === 0 ? 'text-amber-400 font-bold' : 'text-slate-300'} font-mono">${rawVal}</td>
+                            <td class="py-2.5 px-3.5 font-medium text-slate-200">
+                                ${c}
+                                ${boundText}
+                            </td>
+                            <td class="py-2.5 px-3.5 ${rawColor}">${rawVal}</td>
                             <td class="py-2.5 px-3.5">${impBadge}</td>
                             <td class="py-2.5 px-3.5 font-mono text-teal-300 font-bold">${scaleVal.toFixed(4)}</td>
                         </tr>
                     `;
                 }).join('');
 
+                let warningsHtml = '';
+                if (json.warnings && json.warnings.length > 0) {
+                    const warnList = json.warnings.map(w => `<li>• ${w}</li>`).join('');
+                    warningsHtml = `
+                        <div class="mt-4 p-3.5 rounded-xl bg-amber-950/40 border border-amber-800/60 text-xs text-amber-200 space-y-1.5">
+                            <div class="font-bold flex items-center gap-1.5 text-amber-300">
+                                <span>🛡️</span> Otomatik Veri Ön İşleme ve Aykırı Değer Koruması:
+                            </div>
+                            <ul class="space-y-1 text-slate-300 text-[11px]">
+                                ${warnList}
+                            </ul>
+                        </div>
+                    `;
+                }
+
                 resBox.innerHTML = `
                     <div class="w-full text-left">
                         <div class="font-bold text-teal-300 text-xs sm:text-sm mb-3 flex items-center justify-between">
                             <span>⚡ Veri Dönüşüm Akış Tablosu:</span>
-                            <span class="text-[11px] text-slate-400 font-normal">StandardScaler ($z = \frac{x-\mu}{\sigma}$)</span>
+                            <span class="text-[11px] text-slate-400 font-normal">StandardScaler ($z = \\frac{x-\\mu}{\\sigma}$)</span>
                         </div>
                         <div class="overflow-x-auto rounded-xl border border-slate-800">
                             <table class="w-full text-xs text-left">
                                 <thead class="text-slate-400 border-b border-slate-700/80 bg-slate-900/90">
                                     <tr>
-                                        <th class="py-2.5 px-3.5">Özellik Adı</th>
+                                        <th class="py-2.5 px-3.5">Özellik & Limit</th>
                                         <th class="py-2.5 px-3.5">1. Ham Değer</th>
-                                        <th class="py-2.5 px-3.5">2. Eksik Veri İşlemi</th>
+                                        <th class="py-2.5 px-3.5">2. Ön İşleme & Düzeltme</th>
                                         <th class="py-2.5 px-3.5">3. StandardScaler (z-score)</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-800/60 bg-slate-900/40">${rowsHtml}</tbody>
                             </table>
                         </div>
+                        ${warningsHtml}
                     </div>
                 `;
             } catch (e) {
@@ -805,7 +840,7 @@
         }
 
         async function predictDiabetes() {
-            const data = [0, 1, 2, 3, 4, 5, 6, 7].map(i => parseFloat(document.getElementById(`d${i}`).value));
+            const data = [0, 1, 2, 3, 4, 5, 6, 7].map(i => parseFloat(document.getElementById(`d${i}`).value) || 0);
             const resBox = document.getElementById('result-diabetes');
             resBox.classList.remove('hidden');
             resBox.innerHTML = "<span class='text-slate-400 text-sm'>Klinik risk hesaplanıyor...</span>";
@@ -822,6 +857,21 @@
                 const barColor = isHighRisk ? "bg-rose-500" : "bg-emerald-500";
                 const prob = json.probability;
 
+                let warningSection = '';
+                if (json.warnings && json.warnings.length > 0) {
+                    const warnList = json.warnings.map(w => `<li>• ${w}</li>`).join('');
+                    warningSection = `
+                        <div class="mt-3 pt-2.5 border-t border-slate-800 text-left">
+                            <div class="text-[11px] font-semibold text-amber-300 flex items-center gap-1 mb-1">
+                                <span>🛡️</span> Aykırı / Eksik Değer Koruması:
+                            </div>
+                            <ul class="text-[10px] text-slate-400 space-y-0.5">
+                                ${warnList}
+                            </ul>
+                        </div>
+                    `;
+                }
+
                 resBox.innerHTML = `
                     <div class="text-lg font-extrabold ${colorClass} text-center mb-1">${status}</div>
                     <div class="text-xs text-slate-400 text-center mb-2.5">Lojistik Regresyon Hastalık İhtimali: <strong class="text-white font-mono">%${prob.toFixed(1)}</strong></div>
@@ -833,6 +883,7 @@
                         <span>Eşik: %50</span>
                         <span>%100 (Yüksek Risk)</span>
                     </div>
+                    ${warningSection}
                 `;
             } catch (e) {
                 resBox.innerHTML = "<span class='text-rose-400 text-sm'>Sunucu bağlantı hatası!</span>";

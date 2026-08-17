@@ -45,6 +45,65 @@ DIABETES_COLUMNS = [
 ]
 ZERO_AS_MISSING_COLUMNS = ["Glucose", "BloodPressure", "SkinThickness", "BMI"]
 
+# Klinik ve istatistiksel geçerlilik sınırları (Aykırı Değer Kırpma / Capping)
+DIABETES_BOUNDS = {
+    "Pregnancies": {"min": 0.0, "max": 20.0, "label": "Hamilelik Sayısı", "unit": ""},
+    "Glucose": {"min": 40.0, "max": 400.0, "label": "Glikoz", "unit": "mg/dL"},
+    "BloodPressure": {"min": 30.0, "max": 240.0, "label": "Kan Basıncı", "unit": "mmHg"},
+    "SkinThickness": {"min": 5.0, "max": 110.0, "label": "Cilt Kalınlığı", "unit": "mm"},
+    "Insulin": {"min": 0.0, "max": 900.0, "label": "İnsülin", "unit": "mu U/ml"},
+    "BMI": {"min": 10.0, "max": 75.0, "label": "Vücut Kitle İndeksi (BMI)", "unit": "kg/m²"},
+    "DiabetesPedigreeFunction": {"min": 0.05, "max": 2.50, "label": "Soyağacı Fonk. (DPF)", "unit": ""},
+    "Age": {"min": 18.0, "max": 120.0, "label": "Yaş", "unit": "yıl"},
+}
+
+
+def clean_and_impute_diabetes_features(raw_data: list[float]):
+    """
+    1. Ham veriyi sozluk formatinda alir.
+    2. 0 olan biyolojik alanlari (Glucose, BP, Skin, BMI) egitim medyanlari ile doldurur.
+    3. Aykiri / mantiksiz uc degerleri (ornegin Hamilelik < 0 veya > 20, Yas < 18 veya > 120)
+       belirlenen klinik sinirlara kirpar (Winsorization / Capping).
+    4. Yapilan tum duzeltmeleri ve gerekceleri kaydeder.
+    """
+    raw_dict = dict(zip(DIABETES_COLUMNS, [float(v) for v in raw_data]))
+    cleaned_dict = {}
+    imputed_flags = {}
+    clipped_flags = {}
+    warnings = []
+
+    for col in DIABETES_COLUMNS:
+        val = raw_dict[col]
+        bounds = DIABETES_BOUNDS[col]
+        min_b = bounds["min"]
+        max_b = bounds["max"]
+        label = bounds["label"]
+
+        # 1. Eksik Değer Tespiti ve Medyan Doldurma (0 olan biyolojik alanlar)
+        if col in ZERO_AS_MISSING_COLUMNS and val <= 0:
+            val = float(diabetes_medians[col])
+            imputed_flags[col] = True
+            warnings.append(f"{label}: Eksik veri (0) tespit edildi, eğitim medyanı ({val}) ile dolduruldu.")
+        else:
+            imputed_flags[col] = False
+
+        # 2. Aykırı ve Mantıksız Değer Kırpma (Capping / Winsorization)
+        orig_val = val
+        if val < min_b:
+            val = min_b
+            clipped_flags[col] = {"from": orig_val, "to": min_b, "type": "min_clipped"}
+            warnings.append(f"{label}: Girilen değer ({orig_val}) alt sınırın ({min_b}) altında olduğu için {min_b} değerine sabitlendi.")
+        elif val > max_b:
+            val = max_b
+            clipped_flags[col] = {"from": orig_val, "to": max_b, "type": "max_clipped"}
+            warnings.append(f"{label}: Girilen değer ({orig_val}) üst sınırın ({max_b}) üzerinde olduğu için {max_b} değerine sabitlendi.")
+        else:
+            clipped_flags[col] = None
+
+        cleaned_dict[col] = round(val, 4)
+
+    return raw_dict, cleaned_dict, imputed_flags, clipped_flags, warnings
+
 # Digits (Classification - multiclass)
 digits_model = joblib.load("models/digits_model.pkl")
 digits_scaler = joblib.load("models/digits_scaler.pkl")
@@ -112,11 +171,25 @@ class ProductInput(BaseModel):
 async def predict_diabetes(input: DiabetesInput):
     if len(input.data) != 8:
         raise HTTPException(status_code=400, detail="8 özellik bekleniyor (Insulin dahil).")
-    input_df = pd.DataFrame([input.data], columns=DIABETES_COLUMNS)
+    
+    raw_dict, cleaned_dict, imputed_flags, clipped_flags, warnings = clean_and_impute_diabetes_features(input.data)
+    
+    ordered_values = [cleaned_dict[c] for c in DIABETES_COLUMNS]
+    input_df = pd.DataFrame([ordered_values], columns=DIABETES_COLUMNS)
     scaled = diabetes_scaler.transform(input_df)
     pred = diabetes_model.predict(scaled)
     prob = diabetes_model.predict_proba(scaled)[0][1]
-    return {"prediction": int(pred[0]), "probability": float(prob) * 100}
+    
+    return {
+        "prediction": int(pred[0]),
+        "probability": float(prob) * 100,
+        "raw": raw_dict,
+        "cleaned": cleaned_dict,
+        "imputed_flags": imputed_flags,
+        "clipped_flags": clipped_flags,
+        "warnings": warnings,
+        "has_corrections": len(warnings) > 0,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -180,28 +253,21 @@ async def preprocess_diabetes(input: DiabetesInput):
     if len(input.data) != 8:
         raise HTTPException(status_code=400, detail="8 özellik bekleniyor (Insulin dahil).")
 
-    raw = dict(zip(DIABETES_COLUMNS, input.data))
-    imputed = dict(raw)
-    imputed_flags = {}
+    raw_dict, cleaned_dict, imputed_flags, clipped_flags, warnings = clean_and_impute_diabetes_features(input.data)
 
-    # 0 -> median imputation (sadece raporda belirtilen kolonlarda)
-    for col in ZERO_AS_MISSING_COLUMNS:
-        if imputed[col] == 0:
-            imputed[col] = diabetes_medians[col]
-            imputed_flags[col] = True
-        else:
-            imputed_flags[col] = False
-
-    ordered_values = [imputed[c] for c in DIABETES_COLUMNS]
+    ordered_values = [cleaned_dict[c] for c in DIABETES_COLUMNS]
     input_df = pd.DataFrame([ordered_values], columns=DIABETES_COLUMNS)
     scaled_values = diabetes_scaler.transform(input_df)[0]
     scaled = dict(zip(DIABETES_COLUMNS, [round(float(v), 4) for v in scaled_values]))
 
     return {
-        "raw": raw,
-        "imputed": imputed,
+        "raw": raw_dict,
+        "imputed": cleaned_dict,
         "imputed_flags": imputed_flags,
+        "clipped_flags": clipped_flags,
         "scaled": scaled,
+        "warnings": warnings,
+        "bounds": DIABETES_BOUNDS,
     }
 
 
