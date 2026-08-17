@@ -102,11 +102,13 @@ mpv/
 │   ├── digits_scaler.pkl       # StandardScaler (Rakam)
 │   ├── kmeans_model.pkl        # K-Means++ modeli (K=4)
 │   ├── rfm_scaler.pkl          # RFM StandardScaler
+│   ├── rfm_data.pkl            # Gerçek müşteri RFM verisi ve küme etiketleri (N=4,312)
+│   ├── rfm_elbow_wcss.pkl      # Elbow WCSS değerleri (K=1..10)
 │   └── ecommerce_rules_france.csv # Apriori kural tablosu
 └── scripts/                    # Model eğitim ve hazırlık betikleri
     ├── diabetes_model_prep.py  # Diyabet modeli eğitim betiği
     ├── digits_model_prep.py    # Digits modeli eğitim betiği
-    └── ecommerce_kmeans_prep.py # RFM K-Means eğitim betiği
+    └── ecommerce_kmeans_prep.py # RFM K-Means & gerçek veri hazırlık betiği
 ```
 
 ---
@@ -134,6 +136,7 @@ pip install -r requirements.txt
 ```bash
 python scripts/diabetes_model_prep.py
 python scripts/digits_model_prep.py
+python scripts/ecommerce_kmeans_prep.py
 ```
 
 ### 5. Backend Sunucusunu Başlatın

@@ -53,6 +53,11 @@ digits_dataset = load_digits()
 # RFM / K-Means (Clustering)
 kmeans_model = joblib.load("models/kmeans_model.pkl")
 rfm_scaler = joblib.load("models/rfm_scaler.pkl")
+rfm_data = joblib.load("models/rfm_data.pkl") if os.path.exists("models/rfm_data.pkl") else None
+if os.path.exists("models/rfm_elbow_wcss.pkl"):
+    rfm_elbow_wcss = joblib.load("models/rfm_elbow_wcss.pkl")
+else:
+    rfm_elbow_wcss = [12936.0, 6598.96, 4957.95, 3943.33, 3296.19, 2893.23, 2574.44, 2369.21, 2182.59, 2025.29]
 
 # Clustering etiketleri (Centroid analizine gore)
 CLUSTER_LABELS = {
@@ -107,7 +112,8 @@ class ProductInput(BaseModel):
 async def predict_diabetes(input: DiabetesInput):
     if len(input.data) != 8:
         raise HTTPException(status_code=400, detail="8 özellik bekleniyor (Insulin dahil).")
-    scaled = diabetes_scaler.transform([input.data])
+    input_df = pd.DataFrame([input.data], columns=DIABETES_COLUMNS)
+    scaled = diabetes_scaler.transform(input_df)
     pred = diabetes_model.predict(scaled)
     prob = diabetes_model.predict_proba(scaled)[0][1]
     return {"prediction": int(pred[0]), "probability": float(prob) * 100}
@@ -160,7 +166,8 @@ async def predict_digit(input: DigitInput):
 @app.post("/cluster/rfm")
 async def cluster_rfm(input: RFMInput):
     rfm_log = np.log1p([input.recency, input.frequency, input.monetary])
-    scaled = rfm_scaler.transform([rfm_log])
+    input_df = pd.DataFrame([rfm_log], columns=["Recency", "Frequency", "Monetary"])
+    scaled = rfm_scaler.transform(input_df)
     cluster = int(kmeans_model.predict(scaled)[0])
     return {"cluster": cluster, "label": CLUSTER_LABELS.get(cluster, f"Küme {cluster}")}
 
@@ -186,7 +193,8 @@ async def preprocess_diabetes(input: DiabetesInput):
             imputed_flags[col] = False
 
     ordered_values = [imputed[c] for c in DIABETES_COLUMNS]
-    scaled_values = diabetes_scaler.transform([ordered_values])[0]
+    input_df = pd.DataFrame([ordered_values], columns=DIABETES_COLUMNS)
+    scaled_values = diabetes_scaler.transform(input_df)[0]
     scaled = dict(zip(DIABETES_COLUMNS, [round(float(v), 4) for v in scaled_values]))
 
     return {
@@ -250,22 +258,22 @@ def generate_diabetes_cm_image():
     y_pred = diabetes_model.predict(X_test_scaled)
     cm = confusion_matrix(y_test, y_pred)
 
-    plt.figure(figsize=(5.5, 4.2), facecolor='#0f172a')
+    plt.figure(figsize=(7.2, 5.4), facecolor='#0f172a')
     ax = plt.gca()
     ax.set_facecolor('#0f172a')
     sns.heatmap(
         cm, annot=True, fmt='d', cmap='Greens', cbar=False,
         xticklabels=['Healthy (0)', 'Diabetic (1)'],
         yticklabels=['Healthy (0)', 'Diabetic (1)'],
-        annot_kws={"size": 13, "weight": "bold"}
+        annot_kws={"size": 18, "weight": "bold"}
     )
-    plt.title('Confusion Matrix Heatmap (Diabetes Dataset)', fontsize=12, fontweight='bold', color='#2dd4bf', pad=12)
-    plt.ylabel('True Label (Gerçek Değer)', fontweight='bold', color='#cbd5e1', fontsize=10)
-    plt.xlabel('Predicted Label (Model Tahmini)', fontweight='bold', color='#cbd5e1', fontsize=10)
-    ax.tick_params(colors='#94a3b8')
+    plt.title('Confusion Matrix Heatmap (Diabetes Dataset)', fontsize=14, fontweight='bold', color='#2dd4bf', pad=14)
+    plt.ylabel('True Label (Gerçek Değer)', fontweight='bold', color='#cbd5e1', fontsize=12, labelpad=8)
+    plt.xlabel('Predicted Label (Model Tahmini)', fontweight='bold', color='#cbd5e1', fontsize=12, labelpad=8)
+    ax.tick_params(colors='#cbd5e1', labelsize=11)
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
     plt.close()
     return buf.getvalue()
 
@@ -277,20 +285,20 @@ def generate_digits_cm_image():
     y_pred = digits_model.predict(X_test_scaled)
     cm = confusion_matrix(y_test, y_pred)
 
-    plt.figure(figsize=(6.5, 5.2), facecolor='#0f172a')
+    plt.figure(figsize=(8.0, 6.2), facecolor='#0f172a')
     ax = plt.gca()
     ax.set_facecolor('#0f172a')
     sns.heatmap(
         cm, annot=True, fmt='d', cmap='Blues', cbar=False,
-        annot_kws={"size": 10, "weight": "bold"}
+        annot_kws={"size": 12, "weight": "bold"}
     )
-    plt.title('Confusion Matrix Heatmap (Digits Dataset)', fontsize=12, fontweight='bold', color='#2dd4bf', pad=12)
-    plt.xlabel('Predicted Label (Modelin Tahmini)', fontweight='bold', color='#cbd5e1', fontsize=10)
-    plt.ylabel('True Label (Gerçek Değer)', fontweight='bold', color='#cbd5e1', fontsize=10)
-    ax.tick_params(colors='#94a3b8')
+    plt.title('10x10 Confusion Matrix Heatmap (Digits Dataset)', fontsize=14, fontweight='bold', color='#2dd4bf', pad=14)
+    plt.xlabel('Predicted Label (Modelin Tahmini)', fontweight='bold', color='#cbd5e1', fontsize=12, labelpad=8)
+    plt.ylabel('True Label (Gerçek Değer)', fontweight='bold', color='#cbd5e1', fontsize=12, labelpad=8)
+    ax.tick_params(colors='#cbd5e1', labelsize=11)
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
     plt.close()
     return buf.getvalue()
 
@@ -319,22 +327,22 @@ def generate_diabetes_roc_image():
     fpr, tpr, _ = roc_curve(y_test, y_prob)
     auc_score = roc_auc_score(y_test, y_prob)
 
-    plt.figure(figsize=(5.5, 4.2), facecolor='#0f172a')
+    plt.figure(figsize=(7.5, 5.5), facecolor='#0f172a')
     ax = plt.gca()
     ax.set_facecolor('#0f172a')
-    plt.plot(fpr, tpr, color='#2dd4bf', lw=2.5, label=f'Logistic Regression (AUC = {auc_score:.4f})')
-    plt.plot([0, 1], [0, 1], color='#64748b', lw=1.5, linestyle='--', label='Rastgele Tahmin (AUC = 0.50)')
+    plt.plot(fpr, tpr, color='#2dd4bf', lw=3.2, label=f'Logistic Regression (AUC = {auc_score:.4f})')
+    plt.plot([0, 1], [0, 1], color='#94a3b8', lw=2.0, linestyle='--', label='Rastgele Tahmin (AUC = 0.50)')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate (Yanlış Pozitif Oranı)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    plt.ylabel('True Positive Rate (Duyarlılık / Recall)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    plt.title('Diyabet Modeli ROC Eğrisi (ROC-AUC)', color='#2dd4bf', fontweight='bold', fontsize=11.5, pad=10)
-    plt.legend(loc='lower right', facecolor='#1e293b', edgecolor='#334155', labelcolor='#f8fafc', fontsize=8.5)
-    ax.tick_params(colors='#94a3b8', labelsize=8.5)
+    plt.xlabel('False Positive Rate (Yanlış Pozitif Oranı)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    plt.ylabel('True Positive Rate (Duyarlılık / Recall)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    plt.title('Diyabet Modeli ROC Eğrisi (ROC-AUC)', color='#2dd4bf', fontweight='bold', fontsize=14, pad=14)
+    plt.legend(loc='lower right', facecolor='#1e293b', edgecolor='#475569', labelcolor='#f8fafc', fontsize=11, framealpha=0.95, borderpad=0.8)
+    ax.tick_params(colors='#cbd5e1', labelsize=11)
     ax.grid(True, linestyle=':', alpha=0.25, color='#475569')
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
     plt.close()
     return buf.getvalue()
 
@@ -347,36 +355,36 @@ async def visual_diabetes_roc():
 
 def generate_elbow_image():
     k_range = list(range(1, 11))
-    wcss = [17450.2, 9420.5, 6380.1, 4610.8, 3720.4, 3090.2, 2610.5, 2240.1, 1950.3, 1720.8]
+    wcss = rfm_elbow_wcss
 
-    plt.figure(figsize=(6.0, 4.2), facecolor='#0f172a')
+    plt.figure(figsize=(7.8, 5.6), facecolor='#0f172a')
     ax = plt.gca()
     ax.set_facecolor('#0f172a')
-    plt.plot(k_range, wcss, marker='o', color='#2dd4bf', lw=2.5, markersize=7, markerfacecolor='#0d9488', markeredgecolor='#f0fdfa')
+    plt.plot(k_range, wcss, marker='o', color='#2dd4bf', lw=3.0, markersize=9, markerfacecolor='#0d9488', markeredgecolor='#f0fdfa')
 
     # Annotate K=2 (Mathematical Elbow)
     plt.annotate('Matematiksel Dirsek (K=2)\n(En keskin varyans düşüşü)',
-                 xy=(2, wcss[1]), xytext=(3.2, wcss[1] + 2500),
-                 arrowprops=dict(facecolor='#f59e0b', shrink=0.08, width=1.5, headwidth=6),
-                 color='#fbbf24', fontweight='bold', fontsize=8.5,
-                 bbox=dict(boxstyle='round,pad=0.3', facecolor='#1e293b', edgecolor='#f59e0b', alpha=0.9))
+                 xy=(2, wcss[1]), xytext=(3.4, wcss[1] + 1800),
+                 arrowprops=dict(facecolor='#f59e0b', shrink=0.08, width=2.0, headwidth=8),
+                 color='#fbbf24', fontweight='bold', fontsize=10.5,
+                 bbox=dict(boxstyle='round,pad=0.4', facecolor='#1e293b', edgecolor='#f59e0b', alpha=0.95))
 
     # Annotate K=4 (Commercial Optimal Selected)
     plt.annotate('Seçilen Model (K=4)\n(Ticari/Pazarlama Segmentasyonu)',
-                 xy=(4, wcss[3]), xytext=(5.2, wcss[3] + 3000),
-                 arrowprops=dict(facecolor='#38bdf8', shrink=0.08, width=1.5, headwidth=6),
-                 color='#38bdf8', fontweight='bold', fontsize=8.5,
-                 bbox=dict(boxstyle='round,pad=0.3', facecolor='#1e293b', edgecolor='#0284c7', alpha=0.9))
+                 xy=(4, wcss[3]), xytext=(5.3, wcss[3] + 2200),
+                 arrowprops=dict(facecolor='#38bdf8', shrink=0.08, width=2.0, headwidth=8),
+                 color='#38bdf8', fontweight='bold', fontsize=10.5,
+                 bbox=dict(boxstyle='round,pad=0.4', facecolor='#1e293b', edgecolor='#0284c7', alpha=0.95))
 
-    plt.title('Elbow Yöntemi (Dirsek Grafiği - WCSS vs. K)', color='#2dd4bf', fontweight='bold', fontsize=11.5, pad=10)
-    plt.xlabel('Küme Sayısı (K Değeri)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    plt.ylabel('Within-Cluster Sum of Squares (WCSS)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
+    plt.title('Elbow Yöntemi (Dirsek Grafiği - WCSS vs. K)', color='#2dd4bf', fontweight='bold', fontsize=14, pad=14)
+    plt.xlabel('Küme Sayısı (K Değeri)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    plt.ylabel('Within-Cluster Sum of Squares (WCSS)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
     plt.xticks(k_range)
-    ax.tick_params(colors='#94a3b8', labelsize=8.5)
+    ax.tick_params(colors='#cbd5e1', labelsize=11)
     ax.grid(True, linestyle=':', alpha=0.25, color='#475569')
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
     plt.close()
     return buf.getvalue()
 
@@ -388,46 +396,54 @@ async def visual_elbow_curve():
 
 
 def generate_rfm_scatter_image(recency: float = None, frequency: float = None, monetary: float = None):
-    np.random.seed(42)
-    n_per_cluster = 90
-    r0 = np.random.normal(70, 22, n_per_cluster)
-    m0 = np.random.normal(1200, 320, n_per_cluster)
-
-    r1 = np.random.normal(260, 45, n_per_cluster)
-    m1 = np.random.normal(350, 130, n_per_cluster)
-
-    r2 = np.random.normal(15, 8, n_per_cluster)
-    m2 = np.random.normal(5500, 1400, n_per_cluster)
-
-    r3 = np.random.normal(28, 10, n_per_cluster)
-    m3 = np.random.normal(450, 150, n_per_cluster)
-
-    plt.figure(figsize=(6.2, 4.4), facecolor='#0f172a')
+    plt.figure(figsize=(8.2, 6.0), facecolor='#0f172a')
     ax = plt.gca()
     ax.set_facecolor('#0f172a')
 
-    plt.scatter(r0, m0, color='#38bdf8', alpha=0.5, s=25, label='Ortalama (Küme 0)')
-    plt.scatter(r1, m1, color='#f87171', alpha=0.5, s=25, label='Riskli/Kayıp (Küme 1)')
-    plt.scatter(r2, m2, color='#34d399', alpha=0.6, s=30, label='Sadık/VIP (Küme 2)')
-    plt.scatter(r3, m3, color='#fbbf24', alpha=0.5, s=25, label='Yeni Müşteri (Küme 3)')
+    cluster_config = {
+        0: {'color': '#38bdf8', 'label': 'Ortalama / Düzenli (Küme 0)', 'alpha': 0.45, 'size': 26},
+        1: {'color': '#f87171', 'label': 'Riskli / Kayıp (Küme 1)', 'alpha': 0.45, 'size': 26},
+        2: {'color': '#34d399', 'label': 'Sadık / VIP (Küme 2)', 'alpha': 0.55, 'size': 32},
+        3: {'color': '#fbbf24', 'label': 'Yeni Müşteri (Küme 3)', 'alpha': 0.45, 'size': 26},
+    }
+
+    if rfm_data is not None and not rfm_data.empty:
+        for c_id, cfg in cluster_config.items():
+            subset = rfm_data[rfm_data['Cluster'] == c_id]
+            plt.scatter(
+                subset['Recency'],
+                subset['Monetary'],
+                color=cfg['color'],
+                alpha=cfg['alpha'],
+                s=cfg['size'],
+                edgecolors='none',
+                label=cfg['label']
+            )
 
     if recency is not None and monetary is not None:
-        plt.scatter([recency], [monetary], color='#e11d48', s=160, marker='*', edgecolors='#ffffff', linewidth=1.5, zorder=10, label='[Sizin Müşteriniz]')
+        plt.scatter([recency], [monetary], color='#e11d48', s=260, marker='*', edgecolors='#ffffff', linewidth=2.0, zorder=15, label='[Sizin Müşteriniz]')
+        y_offset = max(500, monetary * 0.1)
         plt.annotate(f'Sizin Müşteriniz\n(R={recency:.0f}, M={monetary:.0f}₺)',
-                     xy=(recency, monetary), xytext=(recency + 20, monetary + 400),
-                     arrowprops=dict(facecolor='#f43f5e', shrink=0.08, width=1.5, headwidth=6),
-                     color='#fda4af', fontweight='bold', fontsize=8.5,
-                     bbox=dict(boxstyle='round,pad=0.25', facecolor='#1e293b', edgecolor='#f43f5e', alpha=0.95))
+                     xy=(recency, monetary), xytext=(recency + 25, monetary + y_offset),
+                     arrowprops=dict(facecolor='#f43f5e', shrink=0.08, width=2.0, headwidth=8),
+                     color='#fda4af', fontweight='bold', fontsize=10.5,
+                     bbox=dict(boxstyle='round,pad=0.35', facecolor='#1e293b', edgecolor='#f43f5e', alpha=0.95))
 
-    plt.title('Müşteri Segmentleri Dağılımı (Recency vs. Monetary)', color='#2dd4bf', fontweight='bold', fontsize=11, pad=10)
-    plt.xlabel('Recency (Son Alışverişten Beri Geçen Gün)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    plt.ylabel('Monetary (Toplam Harcama Tutarı ₺)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    plt.legend(loc='upper right', facecolor='#1e293b', edgecolor='#334155', labelcolor='#f8fafc', fontsize=8)
-    ax.tick_params(colors='#94a3b8', labelsize=8.5)
+    # Dinamik Y-ekseni: Aşırı uç değerlerin (whales) tüm grafiği 1 piksele sıkıştırmasını engellemek için
+    # ve kullanıcının girdiği harcama tutarını daima kapsayacak şekilde optimize edilir
+    y_max = max(12000, monetary * 1.15 if monetary is not None else 12000)
+    plt.ylim(0, y_max)
+    plt.xlim(-10, 390)
+
+    plt.title('Gerçek Müşteri Segmentleri Dağılımı (Recency vs. Monetary)', color='#2dd4bf', fontweight='bold', fontsize=14, pad=14)
+    plt.xlabel('Recency (Son Alışverişten Beri Geçen Gün)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    plt.ylabel('Monetary (Toplam Harcama Tutarı ₺)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    plt.legend(loc='upper right', facecolor='#1e293b', edgecolor='#475569', labelcolor='#f8fafc', fontsize=10.5, framealpha=0.95, borderpad=0.7)
+    ax.tick_params(colors='#cbd5e1', labelsize=11)
     ax.grid(True, linestyle=':', alpha=0.25, color='#475569')
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
     plt.close()
     return buf.getvalue()
 
@@ -439,28 +455,28 @@ async def visual_cluster_scatter(recency: float = None, frequency: float = None,
 
 
 def generate_arm_scatter_image():
-    plt.figure(figsize=(6.0, 4.2), facecolor='#0f172a')
+    plt.figure(figsize=(7.8, 5.6), facecolor='#0f172a')
     ax = plt.gca()
     ax.set_facecolor('#0f172a')
 
     scatter = plt.scatter(
         ecommerce_rules['support'], ecommerce_rules['confidence'],
         c=ecommerce_rules['lift'], cmap='YlGnBu',
-        s=ecommerce_rules['lift'] * 18, alpha=0.85, edgecolors='#334155', linewidth=0.8
+        s=ecommerce_rules['lift'] * 24, alpha=0.85, edgecolors='#334155', linewidth=0.9
     )
     cbar = plt.colorbar(scatter)
-    cbar.set_label('Lift (Kaldıraç Gücü)', color='#cbd5e1', fontweight='bold', fontsize=9)
-    cbar.ax.yaxis.set_tick_params(color='#94a3b8')
-    plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='#94a3b8')
+    cbar.set_label('Lift (Kaldıraç Gücü)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    cbar.ax.yaxis.set_tick_params(color='#cbd5e1')
+    plt.setp(plt.getp(cbar.ax.axes, 'yticklabels'), color='#cbd5e1', fontsize=10.5)
 
-    plt.title('Birliktelik Kuralları Dağılımı (Support vs Confidence)', color='#2dd4bf', fontweight='bold', fontsize=11, pad=10)
-    plt.xlabel('Support (Destek Oranı)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    plt.ylabel('Confidence (Güven Oranı)', color='#cbd5e1', fontweight='bold', fontsize=9.5)
-    ax.tick_params(colors='#94a3b8', labelsize=8.5)
+    plt.title('Birliktelik Kuralları Dağılımı (Support vs Confidence)', color='#2dd4bf', fontweight='bold', fontsize=14, pad=14)
+    plt.xlabel('Support (Destek Oranı)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    plt.ylabel('Confidence (Güven Oranı)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
+    ax.tick_params(colors='#cbd5e1', labelsize=11)
     ax.grid(True, linestyle=':', alpha=0.25, color='#475569')
     plt.tight_layout()
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
+    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
     plt.close()
     return buf.getvalue()
 
