@@ -462,8 +462,7 @@ async def visual_elbow_curve():
 
 
 def generate_rfm_scatter_image(recency: float = None, frequency: float = None, monetary: float = None):
-    plt.figure(figsize=(8.2, 6.0), facecolor='#0f172a')
-    ax = plt.gca()
+    fig, ax = plt.subplots(figsize=(9.2, 5.8), facecolor='#0f172a')
     ax.set_facecolor('#0f172a')
 
     cluster_config = {
@@ -476,7 +475,7 @@ def generate_rfm_scatter_image(recency: float = None, frequency: float = None, m
     if rfm_data is not None and not rfm_data.empty:
         for c_id, cfg in cluster_config.items():
             subset = rfm_data[rfm_data['Cluster'] == c_id]
-            plt.scatter(
+            ax.scatter(
                 subset['Recency'],
                 subset['Monetary'],
                 color=cfg['color'],
@@ -486,31 +485,82 @@ def generate_rfm_scatter_image(recency: float = None, frequency: float = None, m
                 label=cfg['label']
             )
 
+    # Dynamic limits:
+    # 1. Dataset recency extends up to 375 days; ensure x_max is at least 420 so that all customers (>350 days)
+    #    are clearly visible with ample margin and proper tick intervals reaching 400.
+    # 2. If user enters recency > 350, expand x_max dynamically so user's star is always framed.
+    x_max = max(420, (recency + 60) if recency is not None else 420)
+    y_max = max(13500, (monetary * 1.22) if monetary is not None else 13500)
+
     if recency is not None and monetary is not None:
-        plt.scatter([recency], [monetary], color='#e11d48', s=260, marker='*', edgecolors='#ffffff', linewidth=2.0, zorder=15, label='[Sizin Müşteriniz]')
-        y_offset = max(500, monetary * 0.1)
-        plt.annotate(f'Sizin Müşteriniz\n(R={recency:.0f}, M={monetary:.0f}₺)',
-                     xy=(recency, monetary), xytext=(recency + 25, monetary + y_offset),
-                     arrowprops=dict(facecolor='#f43f5e', shrink=0.08, width=2.0, headwidth=8),
-                     color='#fda4af', fontweight='bold', fontsize=10.5,
-                     bbox=dict(boxstyle='round,pad=0.35', facecolor='#1e293b', edgecolor='#f43f5e', alpha=0.95))
+        ax.scatter([recency], [monetary], color='#e11d48', s=320, marker='*', edgecolors='#ffffff', linewidth=2.2, zorder=15, label='[Sizin Müşteriniz]')
+        
+        # Adaptive annotation position:
+        # Prevents clipping at edges and avoids overlapping any chart element
+        if recency > x_max * 0.55:
+            x_text = recency - (x_max * 0.06)
+            ha_align = 'right'
+        else:
+            x_text = recency + (x_max * 0.06)
+            ha_align = 'left'
+            
+        if monetary > y_max * 0.65:
+            y_text = monetary - (y_max * 0.12)
+        else:
+            y_text = monetary + (y_max * 0.10)
+            
+        ax.annotate(
+            f'Sizin Müşteriniz\n(R={recency:.0f}, M={monetary:.0f}₺)',
+            xy=(recency, monetary),
+            xytext=(x_text, y_text),
+            ha=ha_align,
+            arrowprops=dict(
+                facecolor='#f43f5e',
+                edgecolor='#ffffff',
+                shrink=0.1,
+                width=2.0,
+                headwidth=7,
+                headlength=6
+            ),
+            color='#fda4af',
+            fontweight='bold',
+            fontsize=10.5,
+            bbox=dict(
+                boxstyle='round,pad=0.45',
+                facecolor='#1e293b',
+                edgecolor='#f43f5e',
+                linewidth=1.6,
+                alpha=0.95
+            ),
+            zorder=20
+        )
 
-    # Dynamic Y-axis: Prevents extreme whale outliers from compressing the entire plot into 1 pixel
-    # while ensuring user's monetary value is properly framed
-    y_max = max(12000, monetary * 1.15 if monetary is not None else 12000)
-    plt.ylim(0, y_max)
-    plt.xlim(-10, 390)
+    ax.set_ylim(0, y_max)
+    ax.set_xlim(-15, x_max)
 
-    plt.title('Gerçek Müşteri Segmentleri Dağılımı (Recency vs. Monetary)', color='#2dd4bf', fontweight='bold', fontsize=14, pad=14)
-    plt.xlabel('Recency (Son Alışverişten Beri Geçen Gün)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
-    plt.ylabel('Monetary (Toplam Harcama Tutarı ₺)', color='#cbd5e1', fontweight='bold', fontsize=12, labelpad=8)
-    plt.legend(loc='upper right', facecolor='#1e293b', edgecolor='#475569', labelcolor='#f8fafc', fontsize=10.5, framealpha=0.95, borderpad=0.7)
-    ax.tick_params(colors='#cbd5e1', labelsize=11)
+    ax.set_title('Gerçek Müşteri Segmentleri Dağılımı (Recency vs. Monetary)', color='#2dd4bf', fontweight='bold', fontsize=13.5, pad=12)
+    ax.set_xlabel('Recency (Son Alışverişten Beri Geçen Gün)', color='#cbd5e1', fontweight='bold', fontsize=11.5, labelpad=8)
+    ax.set_ylabel('Monetary (Toplam Harcama Tutarı ₺)', color='#cbd5e1', fontweight='bold', fontsize=11.5, labelpad=8)
+    
+    # Legend positioned outside the plot on the right so it NEVER collides with points or star annotation
+    ax.legend(
+        loc='upper left',
+        bbox_to_anchor=(1.02, 1.0),
+        facecolor='#1e293b',
+        edgecolor='#334155',
+        labelcolor='#f8fafc',
+        fontsize=9.5,
+        framealpha=0.95,
+        borderpad=0.6,
+        handletextpad=0.5
+    )
+    
+    ax.tick_params(colors='#cbd5e1', labelsize=10.5)
     ax.grid(True, linestyle=':', alpha=0.25, color='#475569')
-    plt.tight_layout()
+    
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=160, facecolor=plt.gcf().get_facecolor(), edgecolor='none')
-    plt.close()
+    plt.savefig(buf, format='png', dpi=160, facecolor=fig.get_facecolor(), edgecolor='none', bbox_inches='tight')
+    plt.close(fig)
     return buf.getvalue()
 
 
