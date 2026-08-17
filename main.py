@@ -462,14 +462,14 @@ async def visual_elbow_curve():
 
 
 def generate_rfm_scatter_image(recency: float = None, frequency: float = None, monetary: float = None):
-    fig, ax = plt.subplots(figsize=(9.2, 5.8), facecolor='#0f172a')
+    fig, ax = plt.subplots(figsize=(9.2, 5.6), facecolor='#0f172a')
     ax.set_facecolor('#0f172a')
 
     cluster_config = {
-        0: {'color': '#38bdf8', 'label': 'Ortalama / Düzenli (Küme 0)', 'alpha': 0.45, 'size': 26},
-        1: {'color': '#f87171', 'label': 'Riskli / Kayıp (Küme 1)', 'alpha': 0.45, 'size': 26},
-        2: {'color': '#34d399', 'label': 'Sadık / VIP (Küme 2)', 'alpha': 0.55, 'size': 32},
-        3: {'color': '#fbbf24', 'label': 'Yeni Müşteri (Küme 3)', 'alpha': 0.45, 'size': 26},
+        0: {'color': '#38bdf8', 'label': 'Ortalama (K0)', 'alpha': 0.45, 'size': 26},
+        1: {'color': '#f87171', 'label': 'Riskli/Kayıp (K1)', 'alpha': 0.45, 'size': 26},
+        2: {'color': '#34d399', 'label': 'Sadık/VIP (K2)', 'alpha': 0.55, 'size': 32},
+        3: {'color': '#fbbf24', 'label': 'Yeni Müşteri (K3)', 'alpha': 0.45, 'size': 26},
     }
 
     if rfm_data is not None and not rfm_data.empty:
@@ -492,8 +492,10 @@ def generate_rfm_scatter_image(recency: float = None, frequency: float = None, m
     x_max = max(420, (recency + 60) if recency is not None else 420)
     y_max = max(13500, (monetary * 1.22) if monetary is not None else 13500)
 
-    if recency is not None and monetary is not None:
-        ax.scatter([recency], [monetary], color='#e11d48', s=320, marker='*', edgecolors='#ffffff', linewidth=2.2, zorder=15, label='[Sizin Müşteriniz]')
+    has_user_point = recency is not None and monetary is not None
+
+    if has_user_point:
+        ax.scatter([recency], [monetary], color='#e11d48', s=320, marker='*', edgecolors='#ffffff', linewidth=2.2, zorder=15, label='Sizin Müşteriniz')
         
         # Adaptive annotation position:
         # Prevents clipping at edges and avoids overlapping any chart element
@@ -538,21 +540,23 @@ def generate_rfm_scatter_image(recency: float = None, frequency: float = None, m
     ax.set_ylim(0, y_max)
     ax.set_xlim(-15, x_max)
 
-    ax.set_title('Gerçek Müşteri Segmentleri Dağılımı (Recency vs. Monetary)', color='#2dd4bf', fontweight='bold', fontsize=13.5, pad=12)
+    ax.set_title('Gerçek Müşteri Segmentleri Dağılımı (Recency vs. Monetary)', color='#2dd4bf', fontweight='bold', fontsize=13.5, pad=38)
     ax.set_xlabel('Recency (Son Alışverişten Beri Geçen Gün)', color='#cbd5e1', fontweight='bold', fontsize=11.5, labelpad=8)
     ax.set_ylabel('Monetary (Toplam Harcama Tutarı ₺)', color='#cbd5e1', fontweight='bold', fontsize=11.5, labelpad=8)
     
-    # Legend positioned outside the plot on the right so it NEVER collides with points or star annotation
+    # Legend positioned horizontally at the top to preserve maximum chart width
     ax.legend(
-        loc='upper left',
-        bbox_to_anchor=(1.02, 1.0),
+        loc='lower center',
+        bbox_to_anchor=(0.5, 1.01),
+        ncol=5 if has_user_point else 4,
         facecolor='#1e293b',
         edgecolor='#334155',
         labelcolor='#f8fafc',
         fontsize=9.5,
         framealpha=0.95,
-        borderpad=0.6,
-        handletextpad=0.5
+        borderpad=0.5,
+        handletextpad=0.4,
+        columnspacing=1.0
     )
     
     ax.tick_params(colors='#cbd5e1', labelsize=10.5)
