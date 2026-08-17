@@ -117,7 +117,7 @@ mpv/
 
 ### 1. Depoyu Klonlayın
 ```bash
-git clone <repo-url>
+git clone https://github.com/andckadir/python-prediction
 cd mpv
 ```
 
@@ -168,15 +168,6 @@ Otomatik interaktif Swagger dokümantasyonuna **`http://127.0.0.1:8000/docs`** a
 | `GET` | `/visualizations/cluster-scatter` | Müşterinin koordinatını içeren canlı K-Means dağılım grafiğini döndürür (PNG). |
 | `GET` | `/visualizations/elbow-curve` | K-Means WCSS Dirsek Eğrisi grafiğini döndürür (PNG). |
 | `GET` | `/visualizations/arm-scatter` | Birliktelik kuralları Destek-Güven-Lift dağılım grafiğini döndürür (PNG). |
-
----
-
-## 🎓 Akademik Referans ve Metodoloji
-
-Bu proje, Dokuz Eylül Üniversitesi Bilgisayar Mühendisliği Bölümü bünyesinde gerçekleştirilen makine öğrenmesi araştırma ve staj raporlarındaki teorik ve deneysel metodolojilere dayanmaktadır.
-
-- **Geliştirici:** Abdulkadir ANDIÇ
-- **Akademik Danışman:** Prof. Dr. Alp KUT
 
 ---
 
