@@ -27,13 +27,13 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Modelleri ve Scaler'ları Yükleme
+# Load Pretrained Models, Scalers, and Statistics
 # ---------------------------------------------------------------------------
-# Diabetes (Classification)
+# Diabetes (Binary Classification)
 diabetes_model = joblib.load("models/diabetes_model.pkl")
 diabetes_scaler = joblib.load("models/diabetes_scaler.pkl")
 
-# Median degerleri
+# Median values computed from training set (leakage-free)
 if os.path.exists("models/diabetes_medians.pkl"):
     diabetes_medians = joblib.load("models/diabetes_medians.pkl")
 else:
@@ -45,7 +45,7 @@ DIABETES_COLUMNS = [
 ]
 ZERO_AS_MISSING_COLUMNS = ["Glucose", "BloodPressure", "SkinThickness", "BMI"]
 
-# Klinik ve istatistiksel geçerlilik sınırları (Aykırı Değer Kırpma / Capping)
+# Clinical and statistical validity bounds (Winsorization / Outlier Capping)
 DIABETES_BOUNDS = {
     "Pregnancies": {"min": 0.0, "max": 20.0, "label": "Hamilelik Sayısı", "unit": ""},
     "Glucose": {"min": 40.0, "max": 400.0, "label": "Glikoz", "unit": "mg/dL"},
@@ -60,11 +60,11 @@ DIABETES_BOUNDS = {
 
 def clean_and_impute_diabetes_features(raw_data: list[float]):
     """
-    1. Ham veriyi sozluk formatinda alir.
-    2. 0 olan biyolojik alanlari (Glucose, BP, Skin, BMI) egitim medyanlari ile doldurur.
-    3. Aykiri / mantiksiz uc degerleri (ornegin Hamilelik < 0 veya > 20, Yas < 18 veya > 120)
-       belirlenen klinik sinirlara kirpar (Winsorization / Capping).
-    4. Yapilan tum duzeltmeleri ve gerekceleri kaydeder.
+    1. Accepts raw input feature list.
+    2. Imputes biologically impossible zeros (Glucose, BP, Skin, BMI) with training medians.
+    3. Caps invalid/extreme outlier values (e.g. Pregnancies < 0 or > 20, Age < 18 or > 120)
+       to predefined clinical limits (Winsorization / Capping).
+    4. Records all transformations and warning reasons.
     """
     raw_dict = dict(zip(DIABETES_COLUMNS, [float(v) for v in raw_data]))
     cleaned_dict = {}
@@ -79,7 +79,7 @@ def clean_and_impute_diabetes_features(raw_data: list[float]):
         max_b = bounds["max"]
         label = bounds["label"]
 
-        # 1. Eksik Değer Tespiti ve Medyan Doldurma (0 olan biyolojik alanlar)
+        # 1. Missing Value Detection and Median Imputation (biologically non-zero fields)
         if col in ZERO_AS_MISSING_COLUMNS and val <= 0:
             val = float(diabetes_medians[col])
             imputed_flags[col] = True
@@ -87,7 +87,7 @@ def clean_and_impute_diabetes_features(raw_data: list[float]):
         else:
             imputed_flags[col] = False
 
-        # 2. Aykırı ve Mantıksız Değer Kırpma (Capping / Winsorization)
+        # 2. Outlier and Extreme Value Capping (Winsorization / Clamping)
         orig_val = val
         if val < min_b:
             val = min_b
@@ -118,7 +118,7 @@ if os.path.exists("models/rfm_elbow_wcss.pkl"):
 else:
     rfm_elbow_wcss = [12936.0, 6598.96, 4957.95, 3943.33, 3296.19, 2893.23, 2574.44, 2369.21, 2182.59, 2025.29]
 
-# Clustering etiketleri (Centroid analizine gore)
+# Cluster labels (Derived from centroid analysis)
 CLUSTER_LABELS = {
     0: "Ortalama / Düzenli Müşteri",
     1: "Riskli / Kaybedilme Tehlikesi Olan Müşteri",
@@ -126,14 +126,14 @@ CLUSTER_LABELS = {
     3: "Yeni / Az Etkileşimli Müşteri",
 }
 
-# Association Rule Mining - onceden hesaplanmis kural tablosu
+# Association Rule Mining - Precomputed rule table
 rules_path = "models/ecommerce_rules_france.csv" if os.path.exists("models/ecommerce_rules_france.csv") else "ecommerce_rules_france.csv"
 ecommerce_rules = pd.read_csv(rules_path)
 
 
 def _parse_frozenset_column(series: pd.Series) -> pd.Series:
-    """'frozenset({\\'A\\', \\'B\\'})' seklinde CSV'den okunan string kolonlari
-    Python listesine cevirir."""
+    """Parses frozenset string representations (e.g. 'frozenset({\\'A\\', \\'B\\'})')
+    from CSV into Python lists."""
     def parse(value: str):
         return re.findall(r"'([^']*)'", str(value))
     return series.apply(parse)
@@ -144,14 +144,14 @@ ecommerce_rules["consequents_list"] = _parse_frozenset_column(ecommerce_rules["c
 
 
 # ---------------------------------------------------------------------------
-# Pydantic Şemaları
+# Pydantic Schemas
 # ---------------------------------------------------------------------------
 class DiabetesInput(BaseModel):
-    data: list[float]  # 8 deger: DIABETES_COLUMNS sirasiyla
+    data: list[float]  # 8 features matching DIABETES_COLUMNS
 
 
 class DigitInput(BaseModel):
-    pixels: list[float]  # 64 deger (8x8, 0-16 araligi)
+    pixels: list[float]  # 64 pixel intensity values (8x8, 0-16 scale)
 
 
 class RFMInput(BaseModel):
@@ -165,7 +165,7 @@ class ProductInput(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# 1) CLASSIFICATION - Diyabet
+# 1) CLASSIFICATION - Diabetes (Binary Logistic Regression)
 # ---------------------------------------------------------------------------
 @app.post("/predict/diabetes")
 async def predict_diabetes(input: DiabetesInput):
@@ -193,7 +193,7 @@ async def predict_diabetes(input: DiabetesInput):
 
 
 # ---------------------------------------------------------------------------
-# 2) CLASSIFICATION - El Yazısı Rakam
+# 2) CLASSIFICATION - Handwritten Digits (Multinomial Logistic Regression)
 # ---------------------------------------------------------------------------
 @app.get("/digits/sample")
 async def get_digit_sample(digit: int | None = None):
@@ -234,7 +234,7 @@ async def predict_digit(input: DigitInput):
 
 
 # ---------------------------------------------------------------------------
-# 3) CLUSTERING - RFM / K-Means
+# 3) CLUSTERING - RFM / K-Means++
 # ---------------------------------------------------------------------------
 @app.post("/cluster/rfm")
 async def cluster_rfm(input: RFMInput):
@@ -246,7 +246,7 @@ async def cluster_rfm(input: RFMInput):
 
 
 # ---------------------------------------------------------------------------
-# 4) DATA PREPROCESSING - Diyabet verisi üzerinde canlı önizleme
+# 4) DATA PREPROCESSING - Live Pipeline Preview on Diabetes Data
 # ---------------------------------------------------------------------------
 @app.post("/preprocess/diabetes")
 async def preprocess_diabetes(input: DiabetesInput):
@@ -276,7 +276,7 @@ async def preprocess_diabetes(input: DiabetesInput):
 # ---------------------------------------------------------------------------
 @app.get("/rules/products")
 async def list_products(limit: int = 60):
-    """Kural tablosunda gecen urunlerin listesini dondurur (dropdown/autocomplete icin)."""
+    """Returns unique products from antecedents and consequents for autocomplete."""
     all_products = set()
     for lst in ecommerce_rules["antecedents_list"]:
         all_products.update(lst)
@@ -311,7 +311,7 @@ async def recommend_products(input: ProductInput):
 
 
 # ---------------------------------------------------------------------------
-# 6) MODEL EVALUATION & VISUALIZATION (Rapordaki Confusion Matrix Dağılımları)
+# 6) MODEL EVALUATION & VISUALIZATION
 # ---------------------------------------------------------------------------
 def generate_diabetes_cm_image():
     csv_path = 'csvs/diabetes.csv' if os.path.exists('csvs/diabetes.csv') else 'diabetes.csv'
@@ -428,7 +428,7 @@ def generate_elbow_image():
     ax.set_facecolor('#0f172a')
     plt.plot(k_range, wcss, marker='o', color='#2dd4bf', lw=3.0, markersize=9, markerfacecolor='#0d9488', markeredgecolor='#f0fdfa')
 
-    # Annotate K=2 (Mathematical Elbow)
+    # Annotate K=2 (Mathematical Elbow point)
     plt.annotate('Matematiksel Dirsek (K=2)\n(En keskin varyans düşüşü)',
                  xy=(2, wcss[1]), xytext=(3.4, wcss[1] + 1800),
                  arrowprops=dict(facecolor='#f59e0b', shrink=0.08, width=2.0, headwidth=8),
@@ -495,8 +495,8 @@ def generate_rfm_scatter_image(recency: float = None, frequency: float = None, m
                      color='#fda4af', fontweight='bold', fontsize=10.5,
                      bbox=dict(boxstyle='round,pad=0.35', facecolor='#1e293b', edgecolor='#f43f5e', alpha=0.95))
 
-    # Dinamik Y-ekseni: Aşırı uç değerlerin (whales) tüm grafiği 1 piksele sıkıştırmasını engellemek için
-    # ve kullanıcının girdiği harcama tutarını daima kapsayacak şekilde optimize edilir
+    # Dynamic Y-axis: Prevents extreme whale outliers from compressing the entire plot into 1 pixel
+    # while ensuring user's monetary value is properly framed
     y_max = max(12000, monetary * 1.15 if monetary is not None else 12000)
     plt.ylim(0, y_max)
     plt.xlim(-10, 390)

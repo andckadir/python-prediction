@@ -9,7 +9,7 @@ if not os.path.exists('models'):
     os.makedirs('models')
 
 csv_path = 'csvs/online_retail_II.csv' if os.path.exists('csvs/online_retail_II.csv') else 'online_retail_II.csv'
-print(f"Veri seti yükleniyor: {csv_path}")
+print(f"Loading dataset: {csv_path}")
 
 df = pd.read_csv(csv_path)
 df.dropna(subset=["Customer ID", "Invoice"], inplace=True)
@@ -33,22 +33,23 @@ rfm_scaled = scaler.fit_transform(rfm_log)
 kmeans = KMeans(n_clusters=4, init="k-means++", random_state=42, n_init=10)
 kmeans.fit(rfm_scaled)
 
-# Gerçek küme etiketlerini rfm DataFrame'ine ekle
+# Add cluster labels to the rfm DataFrame
 rfm["Cluster"] = kmeans.labels_
 
-# Elbow / WCSS değerlerini hesapla
+# Compute Elbow / WCSS (inertia) values for K=1 to 10
 wcss_values = []
 for k in range(1, 11):
     km = KMeans(n_clusters=k, init="k-means++", random_state=42, n_init=10)
     km.fit(rfm_scaled)
     wcss_values.append(round(km.inertia_, 2))
 
+# Save models and artifacts
 joblib.dump(kmeans, 'models/kmeans_model.pkl')
 joblib.dump(scaler, 'models/rfm_scaler.pkl')
 joblib.dump(rfm, 'models/rfm_data.pkl')
 joblib.dump(wcss_values, 'models/rfm_elbow_wcss.pkl')
 
-print("K-Means modeli, scaler ve gerçek rfm_data.pkl başarıyla kaydedildi.")
-print(f"Toplam müşteri sayısı: {len(rfm)}")
-print("Küme dağılımı:\n", rfm['Cluster'].value_counts())
+print("K-Means model, scaler, and rfm_data saved successfully.")
+print(f"Total customers: {len(rfm)}")
+print("Cluster distribution:\n", rfm['Cluster'].value_counts())
 
